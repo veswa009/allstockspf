@@ -8,7 +8,7 @@
   <script>
     (() => {
       try {
-        const authState = window.localStorage.getItem("allstocksportfolio-authenticated") === "true"
+        const authState = window.sessionStorage.getItem("allstocksportfolio-authenticated") === "true"
           ? "authenticated"
           : "unauthenticated";
         document.documentElement.setAttribute("data-auth-state", authState);
@@ -34,6 +34,15 @@
       --warning: #facc15;
       --portfolio-header-height: 54px;
       --portfolio-row-height: 60px;
+      --col-stock: 23%;
+      --col-quantity: 8.5%;
+      --col-average: 9%;
+      --col-current-price: 10.5%;
+      --col-invested: 12%;
+      --col-current-value: 10.5%;
+      --col-pnl: 10.5%;
+      --col-demat: 11.5%;
+      --col-action: 4.5%;
     }
 
     body[data-theme="positive"] {
@@ -58,11 +67,13 @@
 
     html {
       height: 100%;
+      overflow: hidden;
     }
 
     body {
       margin: 0;
       min-height: 100%;
+      height: 100%;
       font-family: "Manrope", "Segoe UI", sans-serif;
       background:
         linear-gradient(135deg, rgba(var(--accent-rgb), 0.18), transparent 36%),
@@ -132,9 +143,9 @@
 
     .table-wrap {
       position: relative;
-      min-height: calc(var(--portfolio-header-height) + (var(--portfolio-row-height) * 6) + 6px);
-      height: calc(var(--portfolio-header-height) + (var(--portfolio-row-height) * 6) + 6px);
-      max-height: calc(var(--portfolio-header-height) + (var(--portfolio-row-height) * 6) + 6px);
+      flex: 1 1 auto;
+      min-height: 0;
+      height: auto;
     }
 
     .table-section {
@@ -142,22 +153,76 @@
       flex: 1 1 auto;
       flex-direction: column;
       min-height: 0;
+      padding-top: 0.3rem;
+      padding-bottom: 0.65rem;
+      box-sizing: border-box;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .page-view {
+      display: none;
+      flex: 1 1 auto;
+      flex-direction: column;
+      min-height: 0;
       width: 100%;
     }
 
+    .page-view.is-active {
+      display: flex;
+    }
+
+    .page-view-scroll {
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .home-page-toolbar {
+      width: 100%;
+      padding-top: 0.8rem;
+    }
+
+    .home-search-form {
+      position: relative;
+      display: flex;
+      width: 100%;
+      gap: 0.75rem;
+    }
+
     .table-scroll-frame {
-      margin-top: 0.7rem;
+      margin-top: 0.32rem;
+      display: flex;
+      flex: 1 1 auto;
+      min-height: 0;
       overflow-x: auto;
+      overflow-y: hidden;
     }
 
     .table-panel {
       min-width: 1240px;
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      min-height: 0;
+      width: 100%;
     }
 
     .column-totals-strip {
       display: grid;
-      grid-template-columns: 23% 8.5% 11% 10.5% 12% 10.5% 8% 11.5% 4.5%;
-      margin-top: 0.6rem;
+      grid-template-columns:
+        var(--col-stock)
+        var(--col-quantity)
+        var(--col-average)
+        var(--col-current-price)
+        var(--col-invested)
+        var(--col-current-value)
+        var(--col-pnl)
+        var(--col-demat)
+        var(--col-action);
+      margin-top: 0.18rem;
+      width: 100%;
+      min-width: 1240px;
+      flex: 0 0 auto;
       border: 1px solid var(--accent-border);
       border-radius: 0.9rem;
       overflow: hidden;
@@ -168,7 +233,7 @@
 
     .column-total-spacer,
     .column-total-cell {
-      min-height: 62px;
+      min-height: 58px;
       border-right: 1px solid rgba(var(--accent-rgb), 0.18);
     }
 
@@ -181,7 +246,10 @@
     }
 
     .column-total-cell {
-      padding: 0.65rem 0.75rem 0.7rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0.35rem 0.7rem 0.45rem;
       background:
         linear-gradient(180deg, rgba(var(--accent-rgb), 0.1), rgba(10, 10, 10, 0.84) 40%);
       text-align: right;
@@ -197,11 +265,11 @@
 
     .column-total-value {
       display: block;
-      margin-top: 0.3rem;
+      margin-top: 0.14rem;
       color: #f4f4f5;
-      font-size: 1rem;
+      font-size: 0.94rem;
       font-weight: 800;
-      line-height: 1.2;
+      line-height: 1.18;
     }
 
     @media (max-width: 900px) {
@@ -241,6 +309,25 @@
       letter-spacing: -0.04em;
       line-height: 1;
       text-shadow: 0 0 14px rgba(255, 255, 255, 0.08);
+      white-space: nowrap;
+    }
+
+    .header-page-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      flex-wrap: wrap;
+      margin-left: 0.2rem;
+    }
+
+    .header-nav-button {
+      min-width: 84px;
+      min-height: 42px;
+      padding: 0.65rem 0.95rem;
+      border-radius: 0.92rem;
+      font-size: 0.8rem;
+      font-weight: 800;
+      line-height: 1;
       white-space: nowrap;
     }
 
@@ -408,8 +495,8 @@
     .app-shell {
       display: flex;
       flex-direction: column;
-      min-height: 100vh;
-      height: 100vh;
+      min-height: 100dvh;
+      height: 100dvh;
       overflow: hidden;
       transition: opacity 280ms ease, transform 280ms ease, filter 280ms ease;
     }
@@ -502,6 +589,89 @@
       transform: translateX(0);
     }
 
+    .quick-menu-card {
+      border-radius: 1.05rem;
+    }
+
+    .quick-menu-close {
+      border-radius: 0.9rem;
+    }
+
+    .quick-menu-badge {
+      padding: 0.42rem 0.8rem;
+      border-radius: 0.82rem;
+      box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.08);
+    }
+
+    .quick-menu-badge-icon {
+      width: 1.15rem;
+      height: 1.15rem;
+      border-radius: 0.42rem;
+      font-size: 0.7rem;
+      line-height: 1;
+    }
+
+    .quick-menu-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.7rem;
+    }
+
+    .quick-menu-actions.is-stack {
+      grid-template-columns: 1fr;
+    }
+
+    .quick-menu-action-button {
+      min-height: 48px;
+      border-radius: 0.9rem;
+      line-height: 1.25;
+      text-wrap: balance;
+    }
+
+    .quick-menu-nav-button.is-active {
+      border-color: rgba(var(--accent-rgb), 0.42);
+      background: rgba(var(--accent-rgb), 0.14);
+      color: var(--accent-soft);
+      box-shadow:
+        inset 0 0 0 1px rgba(var(--accent-rgb), 0.16),
+        0 0 18px rgba(var(--accent-rgb), 0.12);
+    }
+
+    .quick-menu-action-button.is-status {
+      grid-column: 1 / -1;
+    }
+
+    .quick-menu-action-button.is-danger {
+      grid-column: 1 / -1;
+      border-color: rgba(251, 113, 133, 0.38);
+      background: rgba(251, 113, 133, 0.12);
+      color: #fecdd3;
+    }
+
+    .quick-menu-action-button.is-danger:hover {
+      border-color: rgba(251, 113, 133, 0.56);
+      background: rgba(251, 113, 133, 0.18);
+    }
+
+    .quick-menu-action-button:disabled {
+      opacity: 0.9;
+      cursor: not-allowed;
+    }
+
+    .quick-menu-logout {
+      border-radius: 1rem;
+    }
+
+    @media (max-width: 360px) {
+      .quick-menu-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .quick-menu-action-button.is-status {
+        grid-column: auto;
+      }
+    }
+
     .portfolio-table {
       table-layout: fixed;
       width: 100%;
@@ -573,39 +743,42 @@
     }
 
     .stock-column {
-      width: 23%;
+      width: var(--col-stock);
       text-align: left;
     }
 
     .action-column {
-      width: 4.5%;
-      min-width: 52px;
+      width: var(--col-action);
+      min-width: 58px;
       text-align: center;
     }
 
     .quantity-column {
-      width: 8.5%;
+      width: var(--col-quantity);
     }
 
     .avg-column {
-      width: 11%;
+      width: var(--col-average);
     }
 
-    .current-price-column,
+    .current-price-column {
+      width: var(--col-current-price);
+    }
+
     .current-value-column {
-      width: 10.5%;
+      width: var(--col-current-value);
     }
 
     .invested-column {
-      width: 12%;
+      width: var(--col-invested);
     }
 
     .pnl-column {
-      width: 8%;
+      width: var(--col-pnl);
     }
 
     .demat-column {
-      width: 11.5%;
+      width: var(--col-demat);
     }
 
     .stock-text,
@@ -669,6 +842,7 @@
       letter-spacing: 0.08em;
       color: rgba(245, 245, 245, 0.84);
       white-space: nowrap;
+      transition: background 160ms ease, box-shadow 160ms ease, color 160ms ease;
     }
 
     .header-label-wrap {
@@ -837,19 +1011,38 @@
     }
 
     th[data-sort-key].is-sorted {
-      background:
-        linear-gradient(180deg, rgba(var(--accent-rgb), 0.22), rgba(7, 10, 18, 0.98));
       box-shadow:
-        inset 0 -2px 0 rgba(var(--accent-rgb), 0.68),
+        inset 0 -1px 0 rgba(var(--accent-rgb), 0.36),
         0 1px 0 var(--accent-border);
     }
 
     th[data-sort-key].is-sorted .header-label {
+      display: inline-block;
+      padding: 0.22rem 0.46rem;
+      border-radius: 0.68rem;
       color: #f8fafc;
+      background: rgba(var(--accent-rgb), 0.14);
+      box-shadow:
+        inset 0 0 0 1px rgba(var(--accent-rgb), 0.34),
+        0 10px 18px rgba(var(--accent-rgb), 0.12);
+    }
+
+    th[data-sort-key].is-sorted::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 0.34rem;
+      width: clamp(26px, 34%, 54px);
+      height: 2px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, rgba(var(--accent-rgb), 0.98), transparent);
+      transform: translateX(-50%);
+      pointer-events: none;
     }
 
     th[data-sort-key].is-sorted .sort-indicator {
-      color: var(--accent);
+      color: #ffffff;
+      text-shadow: 0 0 16px rgba(var(--accent-rgb), 0.34);
       transform: translateY(-1px);
     }
 
@@ -1107,7 +1300,7 @@
       width: 2.35rem;
       height: 2.35rem;
       border: 0;
-      border-radius: 999px;
+      border-radius: 0.8rem;
       background: rgba(255, 255, 255, 0.05);
       color: rgba(245, 245, 245, 0.72);
       transform: translateY(-50%);
@@ -1428,7 +1621,7 @@
     .dropdown-option,
     .dropdown-static {
       margin-bottom: 0.45rem;
-      border-radius: 0.95rem;
+      border-radius: 0.8rem;
       border: 1px solid rgba(var(--accent-rgb), 0.18);
       background: rgba(10, 12, 18, 0.98);
       transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
@@ -1442,7 +1635,7 @@
       min-width: 72px;
       height: 38px;
       border: 1px solid rgba(var(--accent-rgb), 0.34);
-      border-radius: 999px;
+      border-radius: 0.8rem;
       background:
         linear-gradient(135deg, rgba(var(--accent-rgb), 0.92), rgba(250, 250, 250, 0.88));
       color: #050505;
@@ -1466,7 +1659,7 @@
 
     .dropdown-added-badge {
       padding: 0.42rem 0.82rem;
-      border-radius: 999px;
+      border-radius: 0.72rem;
       border: 1px solid rgba(250, 204, 21, 0.32);
       background: rgba(250, 204, 21, 0.12);
       color: #fde68a;
@@ -1476,8 +1669,289 @@
       text-transform: uppercase;
     }
 
+    .dropdown-status-badge {
+      padding: 0.42rem 0.72rem;
+      border-radius: 0.72rem;
+      border: 1px solid rgba(var(--accent-rgb), 0.24);
+      background: rgba(var(--accent-rgb), 0.1);
+      color: rgba(245, 245, 245, 0.88);
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
     .action-column .header-label {
       letter-spacing: 0.08em;
+      font-size: 0.64rem;
+    }
+
+    .side-panel-profile-name {
+      color: #a7f3d0;
+      text-shadow:
+        0 0 18px rgba(16, 185, 129, 0.2),
+        0 0 32px rgba(16, 185, 129, 0.08);
+    }
+
+    .dashboard-page-view {
+      overflow: hidden;
+    }
+
+    .dashboard-page-shell {
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      min-height: 0;
+      height: 100%;
+      padding-bottom: 0.85rem;
+      box-sizing: border-box;
+    }
+
+    .dashboard-grid-shell {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .dashboard-grid {
+      --dashboard-grid-gap: 0.6rem;
+      --dashboard-card-height: clamp(88px, calc((100dvh - 19rem) / 5), 106px);
+      display: grid;
+      grid-template-columns: repeat(10, minmax(0, 1fr));
+      grid-auto-rows: var(--dashboard-card-height);
+      gap: var(--dashboard-grid-gap);
+      height: auto;
+      max-height: calc((var(--dashboard-card-height) * 5) + (var(--dashboard-grid-gap) * 4));
+      min-height: 0;
+      overflow-y: hidden;
+      overflow-x: hidden;
+      align-content: start;
+      padding-right: 0.18rem;
+      padding-bottom: 0.14rem;
+    }
+
+    .dashboard-grid.is-scrollable {
+      overflow-y: auto;
+    }
+
+    .dashboard-grid.is-empty {
+      display: block;
+      height: auto;
+      max-height: none;
+      overflow: visible;
+      padding-right: 0;
+      padding-bottom: 0;
+    }
+
+    .dashboard-grid.is-empty .page-empty-card {
+      width: 100%;
+    }
+
+    .dashboard-card,
+    .settings-card {
+      border: 1px solid var(--accent-border);
+      border-radius: 1.2rem;
+      background: rgba(10, 10, 10, 0.76);
+      box-shadow: 0 0 24px var(--accent-shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .dashboard-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.45rem;
+      padding: 0.68rem;
+      min-height: 0;
+      border-radius: 1rem;
+      overflow: hidden;
+    }
+
+    .dashboard-card.is-positive {
+      border-color: rgba(34, 197, 94, 0.36);
+      background:
+        radial-gradient(circle at top left, rgba(34, 197, 94, 0.22), transparent 42%),
+        rgba(8, 16, 12, 0.82);
+      box-shadow: 0 0 24px rgba(34, 197, 94, 0.16);
+    }
+
+    .dashboard-card.is-negative {
+      border-color: rgba(251, 113, 133, 0.36);
+      background:
+        radial-gradient(circle at top left, rgba(251, 113, 133, 0.2), transparent 42%),
+        rgba(18, 8, 12, 0.82);
+      box-shadow: 0 0 24px rgba(251, 113, 133, 0.14);
+    }
+
+    .dashboard-card.is-neutral {
+      border-color: rgba(163, 163, 163, 0.32);
+      background:
+        radial-gradient(circle at top left, rgba(163, 163, 163, 0.12), transparent 42%),
+        rgba(10, 12, 18, 0.82);
+    }
+
+    .dashboard-card-copy {
+      min-height: 0;
+    }
+
+    .dashboard-card-copy-pnl {
+      margin-top: 0;
+    }
+
+    .dashboard-card-label {
+      color: rgba(245, 245, 245, 0.55);
+      font-size: 0.54rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .dashboard-card-symbol {
+      margin-top: 0;
+      color: #f8fafc;
+      font-size: 0.9rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .dashboard-card-demat {
+      margin-top: 0;
+      color: rgba(244, 244, 245, 0.8);
+      font-size: 0.68rem;
+      font-weight: 700;
+      line-height: 1.25;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
+    }
+
+    .dashboard-card-pnl {
+      margin-top: 0;
+      font-size: 0.82rem;
+      font-weight: 900;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .page-empty-card {
+      padding: 1.2rem 1.3rem;
+      border: 1px solid var(--accent-border);
+      border-radius: 1.15rem;
+      background: rgba(10, 10, 10, 0.74);
+      box-shadow: 0 0 24px var(--accent-shadow);
+      color: rgba(244, 244, 245, 0.84);
+      backdrop-filter: blur(18px);
+    }
+
+    .settings-grid {
+      display: grid;
+      width: min(100%, 860px);
+      grid-template-columns: minmax(280px, 1.05fr) minmax(240px, 0.8fr);
+      gap: 1rem;
+      align-items: stretch;
+    }
+
+    .settings-actions-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.8rem;
+    }
+
+    .settings-action-button {
+      width: 100%;
+      min-height: 52px;
+      border-radius: 0.95rem;
+      font-size: 0.9rem;
+      font-weight: 800;
+      line-height: 1.35;
+      text-align: center;
+    }
+
+    .settings-action-button.is-danger {
+      border-color: rgba(251, 113, 133, 0.38);
+      background: rgba(251, 113, 133, 0.12);
+      color: #fecdd3;
+    }
+
+    .settings-action-button.is-danger:hover {
+      border-color: rgba(251, 113, 133, 0.56);
+      background: rgba(251, 113, 133, 0.18);
+    }
+
+    .settings-action-button.is-primary {
+      min-height: 56px;
+    }
+
+    @media (max-width: 900px) {
+      .settings-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 1279px) {
+      .dashboard-grid {
+        grid-template-columns: repeat(8, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 1100px) {
+      .header-page-nav {
+        width: 100%;
+        margin-left: 0;
+        padding-top: 0.2rem;
+      }
+
+      .dashboard-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 900px) {
+      .dashboard-page-view {
+        overflow-y: auto;
+      }
+
+      .dashboard-page-shell {
+        height: auto;
+        min-height: 100%;
+      }
+
+      .dashboard-grid-shell {
+        overflow: visible;
+      }
+
+      .dashboard-grid {
+        height: auto;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        max-height: none;
+        grid-auto-rows: minmax(102px, auto);
+        overflow: visible;
+        padding-right: 0;
+        padding-bottom: 0;
+      }
+
+      .dashboard-card {
+        min-height: 118px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .header-nav-button {
+        flex: 1 1 96px;
+        min-width: 0;
+      }
+
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     .data-source-card {
@@ -1486,6 +1960,52 @@
       box-shadow: 0 0 24px var(--accent-shadow);
       backdrop-filter: blur(18px);
       min-height: 46px;
+    }
+
+    .live-price-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 78px;
+      padding: 0.45rem 0.8rem;
+      border-radius: 999px;
+      border: 1px solid rgba(var(--accent-rgb), 0.34);
+      background: rgba(var(--accent-rgb), 0.1);
+      color: var(--accent-soft);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: border-color 180ms ease, background 180ms ease, color 180ms ease;
+    }
+
+    .live-price-pill.is-syncing {
+      border-color: rgba(250, 204, 21, 0.48);
+      background: rgba(250, 204, 21, 0.12);
+      color: #fde68a;
+    }
+
+    .live-price-pill.is-error {
+      border-color: rgba(251, 113, 133, 0.48);
+      background: rgba(251, 113, 133, 0.12);
+      color: #fecdd3;
+    }
+
+    .live-price-timestamp {
+      color: rgba(245, 245, 245, 0.66);
+      font-size: 0.74rem;
+      line-height: 1.4;
+    }
+
+    .refresh-prices-button {
+      min-width: 110px;
+      white-space: nowrap;
+    }
+
+    .refresh-prices-button:disabled {
+      cursor: wait;
+      opacity: 0.7;
+      transform: none;
     }
 
     .stock-summary-row {
@@ -1628,9 +2148,7 @@
 
     @media (max-width: 768px) {
       .table-wrap {
-        height: calc(100vh - 300px);
-        max-height: calc(100vh - 300px);
-        min-height: 300px;
+        min-height: max(320px, calc(var(--portfolio-header-height) + (var(--portfolio-row-height) * 5) + 10px));
       }
     }
   </style>
@@ -1649,7 +2167,7 @@
 
     <div class="relative grid gap-4 px-4 py-4 md:px-6 md:py-5 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
       <section class="min-w-0">
-        <div class="landing-brand-chip inline-flex items-center gap-3 rounded-full px-3.5 py-1.5">
+        <div class="landing-brand-chip inline-flex items-center gap-3 rounded-[1rem] px-3.5 py-1.5">
           <span class="brand-chip-copy">
             <span class="brand-chip-title">All Stocks Portfolio</span>
             <span class="brand-chip-tagline">Bull and bear moves in one place</span>
@@ -1689,11 +2207,11 @@
       </section>
 
       <aside class="landing-auth-card rounded-[1.6rem] p-4 md:p-5">
-        <div class="landing-chip flex items-center gap-2 rounded-full p-1">
-          <button id="showSigninOption" type="button" class="auth-option-button is-active flex-1 rounded-full px-4 py-2.5 text-sm font-extrabold tracking-[0.08em]">
+        <div class="landing-chip flex items-center gap-2 rounded-[1rem] p-1">
+          <button id="showSigninOption" type="button" class="auth-option-button is-active flex-1 rounded-[0.9rem] px-4 py-2.5 text-sm font-extrabold tracking-[0.08em]">
             Sign In
           </button>
-          <button id="showSignupOption" type="button" class="auth-option-button flex-1 rounded-full px-4 py-2.5 text-sm font-extrabold tracking-[0.08em]">
+          <button id="showSignupOption" type="button" class="auth-option-button flex-1 rounded-[0.9rem] px-4 py-2.5 text-sm font-extrabold tracking-[0.08em]">
             Sign Up
           </button>
         </div>
@@ -1706,9 +2224,9 @@
           <form id="signinForm" class="mt-4 space-y-3">
             <div>
               <label for="authIdentifier" class="mb-2 block text-[0.8rem] font-black tracking-[0.04em] text-white/55">
-                Email Address
+                Enter Email
               </label>
-              <input id="authIdentifier" type="text" class="auth-input" placeholder="Enter Email Address" autocomplete="username" autocapitalize="none" spellcheck="false">
+              <input id="authIdentifier" type="email" class="auth-input" placeholder="Enter Email" autocomplete="email" autocapitalize="none" spellcheck="false">
             </div>
 
             <div>
@@ -2026,6 +2544,178 @@
         </button>
       </div>
     </form>
+</div>
+</div>
+
+<div id="updateProfileDialog" class="dialog-backdrop fixed inset-0 z-[10000] hidden items-center justify-center px-4">
+  <div class="dialog-card modal-pop rounded-2xl p-6">
+    <p class="dialog-kicker">Update Profile</p>
+    <h2 class="mt-3 text-[1.5rem] font-extrabold text-white">Edit your name</h2>
+    <p class="mt-3 text-sm leading-6 text-zinc-300/82">
+      Update the first name and last name shown in your dashboard profile.
+    </p>
+
+    <form id="updateProfileForm" class="mt-5 space-y-3">
+      <div class="auth-fields-grid auth-fields-grid-two">
+        <div>
+          <label for="updateProfileFirstName" class="mb-2 block text-[0.8rem] font-black tracking-[0.04em] text-white/55">
+            First Name
+          </label>
+          <input id="updateProfileFirstName" type="text" class="auth-input" placeholder="Enter first name" autocomplete="given-name">
+        </div>
+
+        <div>
+          <label for="updateProfileLastName" class="mb-2 block text-[0.8rem] font-black tracking-[0.04em] text-white/55">
+            Last Name
+          </label>
+          <input id="updateProfileLastName" type="text" class="auth-input" placeholder="Enter last name" autocomplete="family-name">
+        </div>
+      </div>
+
+      <p id="updateProfileError" class="auth-error hidden" aria-live="polite"></p>
+      <p id="updateProfileStatus" class="auth-status hidden" aria-live="polite"></p>
+
+      <div class="mt-5 flex flex-wrap justify-end gap-3">
+        <button id="updateProfileCancel" type="button" class="secondary-button rounded-xl px-5 py-2.5 text-sm font-semibold">
+          Cancel
+        </button>
+        <button type="submit" class="primary-button rounded-xl px-5 py-2.5 text-sm font-semibold">
+          Save Profile
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="profileDialog" class="dialog-backdrop fixed inset-0 z-[10000] hidden items-center justify-center px-4">
+  <div class="dialog-card modal-pop rounded-2xl p-6">
+    <p class="dialog-kicker">Profile</p>
+    <h2 class="mt-3 text-[1.5rem] font-extrabold text-white">Your Account Information</h2>
+    <div id="profileContent" class="mt-5 space-y-4">
+      <!-- Profile content will be inserted here -->
+    </div>
+    <div class="mt-5 flex flex-wrap justify-end gap-3">
+      <button id="profileEditButton" type="button" class="secondary-button rounded-xl px-5 py-2.5 text-sm font-semibold">
+        Edit
+      </button>
+      <button id="profileCloseButton" type="button" class="primary-button rounded-xl px-5 py-2.5 text-sm font-semibold">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="changePasswordDialog" class="dialog-backdrop fixed inset-0 z-[10000] hidden items-center justify-center px-4">
+  <div class="dialog-card modal-pop rounded-2xl p-6">
+    <p class="dialog-kicker">Change Password</p>
+    <h2 class="mt-3 text-[1.5rem] font-extrabold text-white">Update your password</h2>
+    <p class="mt-3 text-sm leading-6 text-zinc-300/82">
+      Enter your current password, then choose a new password with at least 8 characters.
+    </p>
+
+    <form id="changePasswordForm" class="mt-5 space-y-3">
+      <div>
+        <label for="changePasswordCurrent" class="mb-2 block text-[0.8rem] font-black tracking-[0.04em] text-white/55">
+          Current Password
+        </label>
+        <div class="password-field-shell">
+          <input id="changePasswordCurrent" type="password" class="auth-input" placeholder="Enter current password" autocomplete="current-password">
+          <button type="button" class="password-visibility-button" data-password-target="changePasswordCurrent" aria-label="Show password" aria-pressed="false">
+            <span class="password-eye-open" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </span>
+            <span class="password-eye-closed hidden" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m3 3 18 18"></path>
+                <path d="M10.6 10.6A3 3 0 0 0 12 15a3 3 0 0 0 2.4-4.4"></path>
+                <path d="M9.9 5.1A11 11 0 0 1 12 5c6.4 0 10 7 10 7a17.3 17.3 0 0 1-3.1 3.9"></path>
+                <path d="M6.2 6.2C3.7 8 2 12 2 12s3.6 7 10 7a10.7 10.7 0 0 0 5.1-1.2"></path>
+              </svg>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label for="changePasswordNew" class="mb-2 block text-[0.8rem] font-black tracking-[0.04em] text-white/55">
+          New Password
+        </label>
+        <div class="password-field-shell">
+          <input id="changePasswordNew" type="password" class="auth-input" placeholder="Enter new password" autocomplete="new-password">
+          <button type="button" class="password-visibility-button" data-password-target="changePasswordNew" aria-label="Show password" aria-pressed="false">
+            <span class="password-eye-open" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </span>
+            <span class="password-eye-closed hidden" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m3 3 18 18"></path>
+                <path d="M10.6 10.6A3 3 0 0 0 12 15a3 3 0 0 0 2.4-4.4"></path>
+                <path d="M9.9 5.1A11 11 0 0 1 12 5c6.4 0 10 7 10 7a17.3 17.3 0 0 1-3.1 3.9"></path>
+                <path d="M6.2 6.2C3.7 8 2 12 2 12s3.6 7 10 7a10.7 10.7 0 0 0 5.1-1.2"></path>
+              </svg>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label for="changePasswordConfirm" class="mb-2 block text-[0.8rem] font-black tracking-[0.04em] text-white/55">
+          Confirm New Password
+        </label>
+        <div class="password-field-shell">
+          <input id="changePasswordConfirm" type="password" class="auth-input" placeholder="Re-enter new password" autocomplete="new-password">
+          <button type="button" class="password-visibility-button" data-password-target="changePasswordConfirm" aria-label="Show password" aria-pressed="false">
+            <span class="password-eye-open" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </span>
+            <span class="password-eye-closed hidden" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m3 3 18 18"></path>
+                <path d="M10.6 10.6A3 3 0 0 0 12 15a3 3 0 0 0 2.4-4.4"></path>
+                <path d="M9.9 5.1A11 11 0 0 1 12 5c6.4 0 10 7 10 7a17.3 17.3 0 0 1-3.1 3.9"></path>
+                <path d="M6.2 6.2C3.7 8 2 12 2 12s3.6 7 10 7a10.7 10.7 0 0 0 5.1-1.2"></path>
+              </svg>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <p id="changePasswordError" class="auth-error hidden" aria-live="polite"></p>
+      <p id="changePasswordStatus" class="auth-status hidden" aria-live="polite"></p>
+
+      <div class="mt-5 flex flex-wrap justify-end gap-3">
+        <button id="changePasswordCancel" type="button" class="secondary-button rounded-xl px-5 py-2.5 text-sm font-semibold">
+          Cancel
+        </button>
+        <button type="submit" class="primary-button rounded-xl px-5 py-2.5 text-sm font-semibold">
+          Update Password
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="deleteAccountDialog" class="dialog-backdrop fixed inset-0 z-[10000] hidden items-center justify-center px-4">
+  <div class="dialog-card modal-pop rounded-2xl p-6 text-center">
+    <p class="dialog-kicker">Delete Account</p>
+    <p id="deleteAccountMessage" class="dialog-body mt-4"></p>
+    <div class="dialog-actions mt-6">
+      <button id="deleteAccountCancel" type="button" class="secondary-button px-5 py-2.5 rounded-xl font-semibold">
+        Cancel
+      </button>
+      <button id="deleteAccountConfirm" type="button" class="primary-button px-6 py-2.5 rounded-xl font-semibold">
+        Delete
+      </button>
+    </div>
   </div>
 </div>
 
@@ -2036,43 +2726,14 @@
     <div class="flex items-start justify-between gap-3">
       <div>
         <p class="text-[0.72rem] font-black uppercase tracking-[0.2em] text-white/45">Quick Menu</p>
-        <h2 class="mt-2 text-2xl font-extrabold text-white">Dashboard actions</h2>
+        <h2 class="mt-2 text-2xl font-extrabold text-white">Dashboard</h2>
       </div>
-      <button id="closeSidePanelButton" type="button" class="secondary-button rounded-xl px-3 py-2 text-xs font-semibold">
+      <button id="closeSidePanelButton" type="button" class="secondary-button quick-menu-close px-3 py-2 text-xs font-semibold">
         Close
       </button>
     </div>
 
-    <div class="landing-chip mt-6 rounded-[1.35rem] p-4">
-      <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-white/45">Profile</p>
-      <p id="sidePanelProfileName" class="mt-2 text-base font-extrabold text-white">Investor</p>
-      <p id="sidePanelProfileMeta" class="mt-2 text-sm leading-6 text-zinc-300/82">
-        Sign in to manage your account details.
-      </p>
-      <p id="sidePanelEmailStatus" class="mt-2 text-xs font-semibold tracking-[0.04em] text-emerald-200/80">
-        Email sign-in ready
-      </p>
-      <div class="mt-3 flex items-center gap-2">
-        <span id="sidePanelVerifiedBadge" class="hidden inline-flex items-center gap-2 rounded-full border border-emerald-400/35 bg-emerald-500/12 px-3 py-1 text-[0.72rem] font-black uppercase tracking-[0.14em] text-emerald-100">
-          <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-300 text-[0.78rem] font-black text-slate-950">&#10003;</span>
-          Verified
-        </span>
-      </div>
-      <div class="mt-4 grid gap-3 sm:grid-cols-3">
-        <button id="profileButton" type="button" class="secondary-button rounded-xl px-4 py-2.5 text-sm font-semibold">
-          Profile
-        </button>
-        <button id="changeEmailButton" type="button" class="secondary-button rounded-xl px-4 py-2.5 text-sm font-semibold">
-          Change Email
-        </button>
-        <button id="verifyEmailButton" type="button" class="secondary-button inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold">
-          <span id="verifyEmailButtonTick" class="hidden inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-300 text-[0.78rem] font-black text-slate-950">&#10003;</span>
-          <span id="verifyEmailButtonLabel">Verify Email</span>
-        </button>
-      </div>
-    </div>
-
-    <button id="logoutButton" type="button" class="primary-button mt-auto w-full rounded-2xl px-5 py-3 text-sm font-black uppercase tracking-[0.18em]">
+    <button id="logoutButton" type="button" class="primary-button quick-menu-logout mt-6 w-full px-5 py-3 text-sm font-black uppercase tracking-[0.18em]">
       Logout
     </button>
   </aside>
@@ -2084,7 +2745,7 @@
 
     <div class="flex items-start gap-4 flex-wrap lg:flex-nowrap">
 
-      <div class="flex min-w-0 flex-1 items-center gap-3">
+      <div class="flex min-w-0 flex-1 items-center gap-3 flex-wrap">
         <button id="openSidePanelButton" type="button" class="menu-toggle-button" aria-label="Open dashboard menu" aria-expanded="false" aria-controls="sidePanel">
           <span class="menu-grid-icon" aria-hidden="true">
             <span class="menu-grid-dot"></span>
@@ -2099,6 +2760,18 @@
             All Stocks Portfolio
           </h1>
         </div>
+
+        <nav class="header-page-nav" aria-label="Primary pages">
+          <button type="button" class="secondary-button quick-menu-nav-button header-nav-button" data-app-page-target="home">
+            Home
+          </button>
+          <button type="button" class="secondary-button quick-menu-nav-button header-nav-button" data-app-page-target="dashboard">
+            Dashboard
+          </button>
+          <button type="button" class="secondary-button quick-menu-nav-button header-nav-button" data-app-page-target="settings">
+            Settings
+          </button>
+        </nav>
       </div>
 
       <div class="ml-auto flex items-center gap-3 flex-wrap justify-end lg:shrink-0">
@@ -2122,32 +2795,6 @@
 
     </div>
 
-    <div class="mt-2.5 flex flex-col gap-3 xl:flex-row xl:items-start">
-      <form onsubmit="event.preventDefault(); addStock();" class="flex gap-3 relative w-full min-w-0 xl:flex-1">
-
-        <input id="symbol" placeholder="Search stock (ITC, TCS)"
-          oninput="handleSearch()"
-          autocomplete="off"
-          class="search-input flex-1 rounded-lg px-4 py-2.5 text-base focus:outline-none">
-
-        <button type="submit"
-          class="primary-button px-5 py-2.5 rounded-lg font-semibold">
-          Add
-        </button>
-
-        <div id="dropdown"
-          class="dropdown-panel absolute top-full left-0 w-full rounded-lg mt-2 hidden max-h-60 overflow-y-auto z-[70]">
-        </div>
-
-      </form>
-
-      <div class="data-source-card w-full rounded-lg px-4 py-2.5 flex items-center justify-center xl:w-[420px] xl:min-w-[420px]">
-        <p class="theme-text text-sm font-semibold leading-5 text-center">
-          Current Market Price may be delayed up to 20 minutes.&#x26A0;&#xFE0F;
-        </p>
-      </div>
-    </div>
-
   </div>
 
 </div>
@@ -2168,116 +2815,195 @@
   </div>
 </div>
 
-<div class="table-section max-w-[1400px] mx-auto px-4">
+<section id="homePageView" class="page-view is-active">
+  <div class="home-page-toolbar max-w-[1400px] mx-auto px-4">
+    <form onsubmit="event.preventDefault(); addStock();" class="home-search-form">
+      <input id="symbol" placeholder="Search stock (ITC, TCS)"
+        oninput="handleSearch()"
+        autocomplete="off"
+        class="search-input flex-1 rounded-lg px-4 py-2.5 text-base focus:outline-none">
 
-  <div class="table-scroll-frame">
-    <div class="table-panel">
-      <div class="table-wrap rounded-lg overflow-y-auto">
-        <table class="portfolio-table w-full text-left">
-      <thead class="text-sm">
-        <tr>
-          <th class="stock-column cursor-pointer px-3 py-3" data-sort-key="stockName" onclick="sortTable('stockName', this)">
-            <span class="header-shell">
-              <span class="header-label">Stock</span>
-              <span class="sort-indicator">&#8597;</span>
-            </span>
-          </th>
-          <th class="quantity-column input-column text-center cursor-pointer px-1.5 py-3" data-sort-key="quantity" onclick="sortTable('quantity', this)">
-            <span class="header-shell">
-              <span class="header-label">Quantity</span>
-              <span class="sort-indicator">&#8597;</span>
-            </span>
-          </th>
-          <th class="avg-column input-column text-right cursor-pointer px-1.5 py-3" data-sort-key="avgPrice" onclick="sortTable('avgPrice', this)">
-            <span class="header-shell header-shell-right">
-              <span class="header-label header-label-wrap">Average Price</span>
-              <span class="sort-indicator">&#8597;</span>
-            </span>
-          </th>
-          <th class="current-price-column value-column text-right cursor-pointer px-2 py-3" data-sort-key="currentPrice" onclick="sortTable('currentPrice', this)">
-            <span class="header-shell header-shell-right">
-              <span class="header-label header-label-wrap">Current Price</span>
-              <span class="sort-indicator">&#8597;</span>
-            </span>
-          </th>
-          <th class="invested-column value-column text-right cursor-pointer px-2 py-3" data-sort-key="investedValue" onclick="sortTable('investedValue', this)">
-            <span class="header-shell header-shell-right">
-              <span class="header-label header-label-wrap">Invested Value</span>
-              <span class="sort-indicator">&#8597;</span>
-            </span>
-          </th>
-          <th class="current-value-column value-column text-right cursor-pointer px-2 py-3" data-sort-key="currentValue" onclick="sortTable('currentValue', this)">
-            <span class="header-shell header-shell-right">
-              <span class="header-label header-label-wrap">Current Value</span>
-              <span class="sort-indicator">&#8597;</span>
-            </span>
-          </th>
-          <th class="pnl-column value-column text-right cursor-pointer px-2 py-3" data-sort-key="pnl" onclick="sortTable('pnl', this)">
-            <span class="header-shell header-shell-right">
-              <span class="header-label">P&amp;L</span>
-              <span class="sort-indicator">&#8597;</span>
-            </span>
-          </th>
-          <th id="dematHeaderCell" class="demat-column text-center px-2 py-3 relative">
-            <button id="dematHeaderButton" type="button" class="demat-header-button" onclick="toggleDematFilterMenu(event)" title="Filter by demat account">
-              <span class="header-shell">
-                <span class="demat-header-text">
-                  <span class="header-label header-label-nowrap">Demat</span>
-                  <span id="dematFilterStatus" class="demat-filter-status hidden">Filtered</span>
-                </span>
-                <span class="sort-indicator">&#9662;</span>
-              </span>
-            </button>
-            <div id="dematFilterMenu" class="demat-filter-menu hidden"></div>
-          </th>
-          <th class="action-column px-2 py-3">
-            <span class="header-label">Action</span>
-          </th>
-        </tr>
-      </thead>
+      <button type="submit"
+        class="primary-button px-5 py-2.5 rounded-lg font-semibold">
+        Add
+      </button>
 
-      <tbody id="tableBody">
-      </tbody>
-        </table>
+      <div id="dropdown"
+        class="dropdown-panel absolute top-full left-0 w-full rounded-lg mt-2 hidden max-h-60 overflow-y-auto z-[70]">
       </div>
+    </form>
+  </div>
 
-      <div class="column-totals-strip">
-        <div class="column-total-spacer" aria-hidden="true"></div>
-        <div class="column-total-spacer" aria-hidden="true"></div>
-        <div class="column-total-spacer" aria-hidden="true"></div>
-        <div class="column-total-spacer" aria-hidden="true"></div>
-        <div class="column-total-cell">
-          <span class="column-total-label">Total Invested</span>
-          <span id="totalInvested" class="column-total-value whitespace-nowrap">&#8377;0.00</span>
+  <div class="table-section max-w-[1400px] mx-auto px-4 pt-0">
+    <div class="table-scroll-frame">
+      <div class="table-panel">
+        <div class="table-wrap rounded-lg overflow-y-auto">
+          <table class="portfolio-table w-full text-left">
+        <thead class="text-sm">
+          <tr>
+            <th class="stock-column cursor-pointer px-3 py-3" data-sort-key="stockName" onclick="sortTable('stockName', this)">
+              <span class="header-shell">
+                <span class="header-label">Stock</span>
+                <span class="sort-indicator">&#8597;</span>
+              </span>
+            </th>
+            <th class="quantity-column input-column text-center cursor-pointer px-1.5 py-3" data-sort-key="quantity" onclick="sortTable('quantity', this)">
+              <span class="header-shell">
+                <span class="header-label">Quantity</span>
+                <span class="sort-indicator">&#8597;</span>
+              </span>
+            </th>
+            <th class="avg-column input-column text-right cursor-pointer px-1.5 py-3" data-sort-key="avgPrice" onclick="sortTable('avgPrice', this)">
+              <span class="header-shell header-shell-right">
+                <span class="header-label header-label-wrap">Average Price</span>
+                <span class="sort-indicator">&#8597;</span>
+              </span>
+            </th>
+            <th class="current-price-column value-column text-right cursor-pointer px-2 py-3" data-sort-key="currentPrice" onclick="sortTable('currentPrice', this)">
+              <span class="header-shell header-shell-right">
+                <span class="header-label header-label-wrap">Current Price</span>
+                <span class="sort-indicator">&#8597;</span>
+              </span>
+            </th>
+            <th class="invested-column value-column text-right cursor-pointer px-2 py-3" data-sort-key="investedValue" onclick="sortTable('investedValue', this)">
+              <span class="header-shell header-shell-right">
+                <span class="header-label header-label-wrap">Invested Value</span>
+                <span class="sort-indicator">&#8597;</span>
+              </span>
+            </th>
+            <th class="current-value-column value-column text-right cursor-pointer px-2 py-3" data-sort-key="currentValue" onclick="sortTable('currentValue', this)">
+              <span class="header-shell header-shell-right">
+                <span class="header-label header-label-wrap">Current Value</span>
+                <span class="sort-indicator">&#8597;</span>
+              </span>
+            </th>
+            <th class="pnl-column value-column text-right cursor-pointer px-2 py-3" data-sort-key="pnl" onclick="sortTable('pnl', this)">
+              <span class="header-shell header-shell-right">
+                <span class="header-label">P&amp;L</span>
+                <span class="sort-indicator">&#8597;</span>
+              </span>
+            </th>
+            <th id="dematHeaderCell" class="demat-column text-center px-2 py-3 relative">
+              <button id="dematHeaderButton" type="button" class="demat-header-button" onclick="toggleDematFilterMenu(event)" title="Filter by demat account">
+                <span class="header-shell">
+                  <span class="demat-header-text">
+                    <span class="header-label header-label-nowrap">Demat</span>
+                    <span id="dematFilterStatus" class="demat-filter-status hidden">Filtered</span>
+                  </span>
+                  <span class="sort-indicator">&#9662;</span>
+                </span>
+              </button>
+              <div id="dematFilterMenu" class="demat-filter-menu hidden"></div>
+            </th>
+            <th class="action-column px-2 py-3">
+              <span class="header-label">Action</span>
+            </th>
+          </tr>
+        </thead>
+
+        <tbody id="tableBody">
+        </tbody>
+          </table>
         </div>
-        <div class="column-total-cell">
-          <span class="column-total-label">Total Current</span>
-          <span id="totalCurrentValue" class="column-total-value whitespace-nowrap">&#8377;0.00</span>
+
+        <div class="column-totals-strip">
+          <div class="column-total-spacer" aria-hidden="true"></div>
+          <div class="column-total-spacer" aria-hidden="true"></div>
+          <div class="column-total-spacer" aria-hidden="true"></div>
+          <div class="column-total-spacer" aria-hidden="true"></div>
+          <div class="column-total-cell">
+            <span class="column-total-label">Total Invested</span>
+            <span id="totalInvested" class="column-total-value whitespace-nowrap">&#8377;0.00</span>
+          </div>
+          <div class="column-total-cell">
+            <span class="column-total-label">Total Current</span>
+            <span id="totalCurrentValue" class="column-total-value whitespace-nowrap">&#8377;0.00</span>
+          </div>
+          <div class="column-total-cell">
+            <span class="column-total-label">Total P&amp;L</span>
+            <span id="portfolioSummaryPnl" class="column-total-value profit-neutral whitespace-nowrap">&#8377;0.00</span>
+          </div>
+          <div class="column-total-spacer" aria-hidden="true"></div>
+          <div class="column-total-spacer" aria-hidden="true"></div>
         </div>
-        <div class="column-total-cell">
-          <span class="column-total-label">Total P&amp;L</span>
-          <span id="portfolioSummaryPnl" class="column-total-value profit-neutral whitespace-nowrap">&#8377;0.00</span>
-        </div>
-        <div class="column-total-spacer" aria-hidden="true"></div>
-        <div class="column-total-spacer" aria-hidden="true"></div>
       </div>
     </div>
   </div>
+</section>
+
+<section id="dashboardPageView" class="page-view dashboard-page-view">
+  <div class="dashboard-page-shell max-w-[1400px] mx-auto w-full px-4 py-3">
+    <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-white/45">Dashboard View</p>
+    <h2 class="mt-2 text-[1.7rem] font-extrabold text-white">Portfolio Boxes</h2>
+    <p id="dashboardSummary" class="mt-2 text-sm leading-6 text-zinc-300/82">
+      Your tracked stocks will appear here.
+    </p>
+    <div class="dashboard-grid-shell mt-5">
+      <div id="dashboardGrid" class="dashboard-grid"></div>
+    </div>
+  </div>
+</section>
+
+<section id="settingsPageView" class="page-view page-view-scroll">
+  <div class="max-w-[1400px] mx-auto w-full px-4 py-3">
+    <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-white/45">Settings</p>
+    <h2 class="mt-2 text-[1.7rem] font-extrabold text-white">Account &amp; Security</h2>
+    <p class="mt-2 text-sm leading-6 text-zinc-300/82">
+      Manage your profile, email, password, and account actions from one place.
+    </p>
+
+    <div class="settings-grid mt-5">
+      <div class="settings-card p-5">
+        <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-white/45">Account</p>
+        <p id="settingsProfileName" class="mt-3 text-[1.35rem] font-extrabold text-white">Investor</p>
+        <p id="settingsProfileEmail" class="mt-2 text-sm leading-6 text-zinc-300/82">
+          Sign in to manage your account details.
+        </p>
+        <p id="settingsProfileStatus" class="mt-3 text-sm font-semibold text-emerald-200/80">
+          No active account.
+        </p>
+      </div>
+
+      <div class="settings-card p-5">
+        <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-white/45">Actions</p>
+        <div class="settings-actions-grid mt-4">
+          <button id="settingsViewProfileButton" type="button" class="secondary-button settings-action-button px-4 py-3">
+            View Profile
+          </button>
+          <button id="settingsChangeEmailButton" type="button" class="secondary-button settings-action-button px-4 py-3">
+            Change Email
+          </button>
+          <button id="settingsChangePasswordButton" type="button" class="secondary-button settings-action-button px-4 py-3">
+            Change Password
+          </button>
+          <button id="settingsVerifyEmailButton" type="button" class="secondary-button settings-action-button px-4 py-3 hidden">
+            Verify Email
+          </button>
+          <button id="settingsDeleteAccountButton" type="button" class="secondary-button settings-action-button is-danger px-4 py-3">
+            Delete Account
+          </button>
+          <button id="settingsLogoutButton" type="button" class="primary-button settings-action-button is-primary px-4 py-3">
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 </div>
 
-</div>
-
+<script src="assets/nse-stock-master.js?v=20260508"></script>
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
   getFirestore,
   collection,
-  addDoc,
   getDocs,
   deleteDoc,
   doc,
+  runTransaction,
   updateDoc,
   setDoc,
   query,
@@ -2285,13 +3011,19 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import {
   getAuth,
+  setPersistence,
+  browserSessionPersistence,
   sendSignInLinkToEmail,
   isSignInWithEmailLink,
   signInWithEmailLink,
+  deleteUser,
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-const STOCK_SHEET_URL = "https://docs.google.com/spreadsheets/d/17B4IEGfyIwoWGwEsdadqFzwXvn5LNW5-8E8ZeGvZKrE/gviz/tq?tqx=out:json";
+const MARKET_DATA_API_FALLBACK_ORIGIN = "http://127.0.0.1:8000";
+const STOCK_MASTER_API_PATH = "/data";
+const NSE_LIVE_PRICE_API_PATH = "/api/nse/quotes";
+const LIVE_PRICE_REFRESH_INTERVAL_MS = 60 * 1000;
 const RUPEE = "\u20B9";
 const DEFAULT_DEMAT = "";
 const DEMAT_SELECT_LABEL = "Select";
@@ -2300,10 +3032,16 @@ const AUTH_STORAGE_KEY = "allstocksportfolio-authenticated";
 const AUTH_PROFILE_STORAGE_KEY = "allstocksportfolio-auth-profile";
 const USERS_COLLECTION_NAME = "allstocksportfolio-users";
 const PORTFOLIO_COLLECTION_NAME = "portfolio";
+const ACCOUNT_SEQUENCE_DOC_ID = "account_sequence";
+const ACCOUNT_ID_PREFIX = "ASP";
+const ACCOUNT_SEQUENCE_PAD_LENGTH = 7;
+const ACCOUNT_NAME_BLOCK_LENGTH = 4;
+const ACCOUNT_RANDOM_DIGITS_LENGTH = 4;
 const DEFAULT_ACCOUNT_NAME = "Investor";
 const DEFAULT_TEST_USER = Object.freeze({
   docId: "local-admin-test-user",
   uniqueNumber: "ASP-ADMIN",
+  userSequence: 0,
   firstName: "Admin",
   lastName: "",
   email: "",
@@ -2358,6 +3096,11 @@ const indianCurrencyFormatter = new Intl.NumberFormat("en-IN", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2
 });
+const livePriceTimeFormatter = new Intl.DateTimeFormat("en-IN", {
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit"
+});
 
 const portfolioFirebaseConfig = {
   apiKey: "AIzaSyCqhcJC6m4qdETVgDCIVlZX55451UYRq1o",
@@ -2376,12 +3119,17 @@ const auth = getAuth(portfolioApp);
 let highlightedIndex = -1;
 let currentMatches = [];
 let stockMasterLoaded = false;
+let stockMasterSource = "api";
 let currentSort = getDefaultSort();
 let currentDematFilter = DEMAT_FILTER_ALL;
 let pendingValueDialogRowId = "";
 let pendingDeleteRowId = "";
 let rowCounter = 0;
 let currentAuthMode = "signin";
+let currentAppPage = "home";
+let livePriceRefreshTimer = 0;
+let livePriceRefreshInFlight = false;
+let lastLivePriceSyncAt = null;
 let signupEmailVerificationState = {
   email: "",
   verified: false
@@ -2391,7 +3139,6 @@ let signupSuccessState = {
   firstName: ""
 };
 
-const addedStocks = new Set();
 const masterStocks = {};
 
 function createRowIndex() {
@@ -2430,6 +3177,17 @@ function formatSignedCurrency(value) {
   return `${prefix}${RUPEE}${indianCurrencyFormatter.format(Math.abs(amount))}`;
 }
 
+function getPreferredCurrentPrice(symbol, fallbackValue = 0) {
+  const normalizedSymbol = String(symbol ?? "").trim().toUpperCase();
+  const liveCurrentPrice = parseMoney(masterStocks[normalizedSymbol]?.currentPrice);
+
+  if (liveCurrentPrice > 0) {
+    return liveCurrentPrice;
+  }
+
+  return parseMoney(fallbackValue);
+}
+
 function parseQuantity(value) {
   const digits = String(value ?? "").replace(/\D/g, "").slice(0, QUANTITY_DIGITS);
   return Number.parseInt(digits || "0", 10);
@@ -2463,6 +3221,20 @@ function formatUserDisplayName(username) {
   return formattedName;
 }
 
+function formatProfileDisplayName(profile = {}) {
+  const fullName = [profile?.firstName, profile?.lastName]
+    .map(value => formatNamePart(value))
+    .filter(Boolean)
+    .join(" ");
+
+  return fullName || formatUserDisplayName(profile?.username || DEFAULT_ACCOUNT_NAME);
+}
+
+function normalizePositiveInteger(value) {
+  const parsedValue = Number.parseInt(String(value ?? "").trim(), 10);
+  return Number.isInteger(parsedValue) && parsedValue > 0 ? parsedValue : 0;
+}
+
 function sanitizeNameInputValue(value) {
   return String(value ?? "")
     .replace(/[^A-Za-z\s]/g, "")
@@ -2471,6 +3243,116 @@ function sanitizeNameInputValue(value) {
 
 function isValidNameValue(value) {
   return /^[A-Za-z]+(?:\s+[A-Za-z]+)*$/.test(String(value ?? "").trim());
+}
+
+function extractUserSequenceFromAccountId(uniqueNumber = "") {
+  const match = String(uniqueNumber ?? "").trim().toUpperCase().match(/^ASP-(\d{7})[A-Z]{4}\d{4}$/);
+  return match ? normalizePositiveInteger(match[1]) : 0;
+}
+
+function getUserSequence(user = {}) {
+  const safeUser = user && typeof user === "object" ? user : {};
+  return normalizePositiveInteger(safeUser.userSequence) || extractUserSequenceFromAccountId(safeUser.uniqueNumber);
+}
+
+function formatUserLabel(user = {}) {
+  const safeUser = user && typeof user === "object" ? user : {};
+  const userSequence = getUserSequence(safeUser);
+  return userSequence > 0 ? `USER-${userSequence}` : "";
+}
+
+function isLocalTestProfile(profile = {}) {
+  return String(profile?.userId || profile?.docId || "").trim() === DEFAULT_TEST_USER.docId;
+}
+
+function normalizeLookupToken(value) {
+  return String(value ?? "").trim().toLowerCase();
+}
+
+function getMarketDataApiBaseUrls() {
+  const baseUrls = [];
+
+  if (window.location.protocol !== "file:" && window.location.origin) {
+    baseUrls.push(window.location.origin);
+  }
+
+  if (!baseUrls.includes(MARKET_DATA_API_FALLBACK_ORIGIN)) {
+    baseUrls.push(MARKET_DATA_API_FALLBACK_ORIGIN);
+  }
+
+  return baseUrls;
+}
+
+function buildAccountNameBlock(firstName = "", lastName = "") {
+  const normalizedFirstName = sanitizeNameInputValue(firstName).replace(/\s+/g, "").toUpperCase();
+  const normalizedLastName = sanitizeNameInputValue(lastName).replace(/\s+/g, "").toUpperCase();
+  const combinedName = `${normalizedFirstName}${normalizedLastName}`.slice(0, ACCOUNT_NAME_BLOCK_LENGTH);
+
+  return `${combinedName}${"Z".repeat(ACCOUNT_NAME_BLOCK_LENGTH)}`.slice(0, ACCOUNT_NAME_BLOCK_LENGTH);
+}
+
+function generateRandomDigits(length = ACCOUNT_RANDOM_DIGITS_LENGTH) {
+  const safeLength = Math.max(1, Number.parseInt(String(length ?? ACCOUNT_RANDOM_DIGITS_LENGTH), 10) || ACCOUNT_RANDOM_DIGITS_LENGTH);
+  const values = new Uint32Array(safeLength);
+  crypto.getRandomValues(values);
+
+  return Array.from(values, value => String(value % 10)).join("");
+}
+
+function formatAccountSequence(value) {
+  return String(normalizePositiveInteger(value)).padStart(ACCOUNT_SEQUENCE_PAD_LENGTH, "0");
+}
+
+function buildAccountUniqueNumber({ firstName = "", lastName = "", userSequence = 0 } = {}) {
+  return `${ACCOUNT_ID_PREFIX}-${formatAccountSequence(userSequence)}${buildAccountNameBlock(firstName, lastName)}${generateRandomDigits()}`;
+}
+
+function getEstimatedNextUserSequence(users = []) {
+  const registeredUserCount = users.filter(user => user?.docId && user.docId !== DEFAULT_TEST_USER.docId).length;
+  const highestKnownSequence = users.reduce((highestValue, user) => Math.max(highestValue, getUserSequence(user)), 0);
+
+  return Math.max(registeredUserCount, highestKnownSequence) + 1;
+}
+
+async function createUserAccount(signupData, passwordHash, knownUsers = []) {
+  const estimatedNextSequence = getEstimatedNextUserSequence(knownUsers);
+  const counterRef = doc(db, USERS_COLLECTION_NAME, ACCOUNT_SEQUENCE_DOC_ID);
+  const userRef = doc(collection(db, USERS_COLLECTION_NAME));
+
+  return runTransaction(db, async (transaction) => {
+    const counterSnapshot = await transaction.get(counterRef);
+    const storedNextSequence = normalizePositiveInteger(counterSnapshot.data()?.nextSequence);
+    const userSequence = Math.max(storedNextSequence || estimatedNextSequence, estimatedNextSequence);
+    const createdAt = new Date().toISOString();
+    const userPayload = {
+      uniqueNumber: buildAccountUniqueNumber({
+        firstName: signupData.firstName,
+        lastName: signupData.lastName,
+        userSequence
+      }),
+      userSequence,
+      firstName: signupData.firstName,
+      lastName: signupData.lastName,
+      email: signupData.email,
+      passwordHash,
+      emailVerified: false,
+      emailVerifiedAt: "",
+      createdAt
+    };
+
+    transaction.set(counterRef, {
+      nextSequence: userSequence + 1,
+      updatedAt: createdAt
+    }, {
+      merge: true
+    });
+    transaction.set(userRef, userPayload);
+
+    return {
+      docId: userRef.id,
+      ...userPayload
+    };
+  });
 }
 
 function escapeHtml(value) {
@@ -2487,11 +3369,12 @@ function buildStockRecord(symbol, savedStock = {}) {
   const masterStock = masterStocks[normalizedSymbol] || {};
 
   return {
+    docKey: String(savedStock.docKey ?? savedStock.__docKey ?? "").trim(),
     symbol: normalizedSymbol,
     stockName: savedStock.stockName || savedStock.name || masterStock.name || normalizedSymbol,
     quantity: parseQuantity(savedStock.quantity ?? savedStock.shares ?? 0),
     avgPrice: parseMoney(savedStock.avgPrice ?? 0),
-    currentPrice: parseMoney(masterStock.currentPrice ?? savedStock.currentPrice ?? savedStock.cmp ?? 0),
+    currentPrice: getPreferredCurrentPrice(normalizedSymbol, savedStock.currentPrice ?? savedStock.cmp ?? 0),
     demat: normalizeDemat(savedStock.demat)
   };
 }
@@ -2508,10 +3391,93 @@ function getDematDisplayValue(value) {
   return normalizedDemat || DEMAT_SELECT_LABEL;
 }
 
-function createDematOptionsMarkup(selectedDemat) {
+function buildStockDematKey(symbol, demat) {
+  const normalizedSymbol = String(symbol ?? "").trim().toUpperCase();
+  const normalizedDemat = normalizeDemat(demat);
+
+  if (!normalizedSymbol || !normalizedDemat) {
+    return "";
+  }
+
+  return `${normalizedSymbol}__${normalizedDemat}`;
+}
+
+function getUsedDematAccountsForSymbol(symbol, { excludeRowId = "" } = {}) {
+  const normalizedSymbol = String(symbol ?? "").trim().toUpperCase();
+  const usedDemats = new Set();
+
+  if (!normalizedSymbol) {
+    return usedDemats;
+  }
+
+  getPortfolioStockRows().forEach(row => {
+    if (excludeRowId && row.id === excludeRowId) {
+      return;
+    }
+
+    if (String(row.dataset.symbol ?? "").trim().toUpperCase() !== normalizedSymbol) {
+      return;
+    }
+
+    const rowDemat = normalizeDemat(getPortfolioRowState(row).demat);
+
+    if (rowDemat) {
+      usedDemats.add(rowDemat);
+    }
+  });
+
+  return usedDemats;
+}
+
+function getAvailableDematOptionsForSymbol(symbol, {
+  selectedDemat = DEFAULT_DEMAT,
+  excludeRowId = ""
+} = {}) {
+  const normalizedSelectedDemat = normalizeDemat(selectedDemat);
+  const usedDemats = getUsedDematAccountsForSymbol(symbol, {
+    excludeRowId
+  });
+
+  return DEMAT_OPTIONS.filter(option => {
+    if (option === DEFAULT_DEMAT) {
+      return true;
+    }
+
+    if (option === normalizedSelectedDemat) {
+      return true;
+    }
+
+    return !usedDemats.has(option);
+  });
+}
+
+function getRemainingDematCountForSymbol(symbol, options = {}) {
+  return getAvailableDematOptionsForSymbol(symbol, options).filter(Boolean).length;
+}
+
+function isSymbolFullyAssigned(symbol, options = {}) {
+  return getRemainingDematCountForSymbol(symbol, options) === 0;
+}
+
+function isStockAlreadyAddedInDemat(symbol, demat, { excludeRowId = "" } = {}) {
+  const normalizedDemat = normalizeDemat(demat);
+
+  if (!normalizedDemat) {
+    return false;
+  }
+
+  return getUsedDematAccountsForSymbol(symbol, {
+    excludeRowId
+  }).has(normalizedDemat);
+}
+
+function createDematOptionsMarkup(symbol, selectedDemat, { excludeRowId = "" } = {}) {
   const normalizedDemat = normalizeDemat(selectedDemat);
 
-  return DEMAT_OPTIONS
+  return getAvailableDematOptionsForSymbol(symbol, {
+    selectedDemat: normalizedDemat,
+    excludeRowId
+  })
     .map(option => {
       const escapedOption = escapeHtml(option);
       const optionLabel = option ? escapedOption : DEMAT_SELECT_LABEL;
@@ -2641,6 +3607,58 @@ function applyDematFilter(filterValue) {
   updateSummary();
   renderDematFilterMenu();
   hideDematFilterMenu();
+}
+
+function refreshSearchDropdownResults() {
+  const dropdown = document.getElementById("dropdown");
+  const symbolInput = document.getElementById("symbol");
+
+  if (!dropdown || dropdown.classList.contains("hidden")) {
+    return;
+  }
+
+  if (symbolInput?.value.trim()) {
+    handleSearch();
+    return;
+  }
+
+  showAllStocks();
+}
+
+function updateDematSelectOptions(index) {
+  const row = getRowByIndex(index);
+  const dematSelect = document.getElementById(`demat-${index}`);
+
+  if (!row || !dematSelect) {
+    return;
+  }
+
+  const currentValue = normalizeDemat(dematSelect.value || row.dataset.demat);
+
+  dematSelect.innerHTML = createDematOptionsMarkup(row.dataset.symbol, currentValue, {
+    excludeRowId: index
+  });
+
+  const hasCurrentValue = Array.from(dematSelect.options).some(option => normalizeDemat(option.value) === currentValue);
+  dematSelect.value = hasCurrentValue ? currentValue : DEFAULT_DEMAT;
+}
+
+function syncDematOptionsForSymbol(symbol) {
+  const normalizedSymbol = String(symbol ?? "").trim().toUpperCase();
+
+  if (!normalizedSymbol) {
+    return;
+  }
+
+  getPortfolioStockRows().forEach(row => {
+    if (String(row.dataset.symbol ?? "").trim().toUpperCase() === normalizedSymbol) {
+      updateDematSelectOptions(row.id);
+    }
+  });
+}
+
+function syncAllDematOptions() {
+  getPortfolioStockRows().forEach(row => updateDematSelectOptions(row.id));
 }
 
 function sanitizeQuantityValue(rawValue) {
@@ -2789,7 +3807,7 @@ function getSearchMatches(query = "") {
 }
 
 function getFirstSelectableMatchIndex() {
-  return currentMatches.findIndex(symbol => !addedStocks.has(symbol));
+  return currentMatches.findIndex(symbol => !isSymbolFullyAssigned(symbol));
 }
 
 function setDefaultHighlightedMatch() {
@@ -2803,12 +3821,12 @@ function getNextSelectableMatchIndex(startIndex, direction) {
     return -1;
   }
 
-  if (startIndex < 0 || addedStocks.has(currentMatches[startIndex])) {
+  if (startIndex < 0 || isSymbolFullyAssigned(currentMatches[startIndex])) {
     return firstSelectableIndex;
   }
 
   for (let index = startIndex + direction; index >= 0 && index < currentMatches.length; index += direction) {
-    if (!addedStocks.has(currentMatches[index])) {
+    if (!isSymbolFullyAssigned(currentMatches[index])) {
       return index;
     }
   }
@@ -2885,6 +3903,7 @@ function setEditorRowExpanded(index, isExpanded, { focusField = "" } = {}) {
   if (isExpanded) {
     row.classList.add("is-expanded");
     editorRow.classList.remove("hidden");
+    updateDematSelectOptions(index);
   } else {
     row.classList.remove("is-expanded");
     editorRow.classList.add("hidden");
@@ -2951,8 +3970,345 @@ function setAppShellLocked(isLocked) {
   appShell.setAttribute("aria-hidden", String(isLocked));
 }
 
-function parseGvizResponse(text) {
-  return JSON.parse(text.substring(47, text.length - 2));
+function buildStockMasterSnapshotFromApiRows(rows = []) {
+  const nextMasterStocks = {};
+
+  rows.forEach(row => {
+    const symbol = String(row?.symbol ?? "").trim().toUpperCase();
+    const name = String(row?.company_name ?? row?.name ?? "").trim();
+    const currentPrice = parseMoney(row?.cmp ?? row?.currentPrice);
+
+    if (symbol) {
+      nextMasterStocks[symbol] = {
+        ...masterStocks[symbol],
+        name: name || masterStocks[symbol]?.name || symbol,
+        currentPrice
+      };
+    }
+  });
+
+  return nextMasterStocks;
+}
+
+function getBundledStockMasterRows() {
+  return Array.isArray(window.DEFAULT_STOCK_MASTER_ROWS) ? window.DEFAULT_STOCK_MASTER_ROWS : [];
+}
+
+function getBundledStockMasterSnapshot() {
+  return buildStockMasterSnapshotFromApiRows(getBundledStockMasterRows());
+}
+
+function formatLivePriceSyncTime(value) {
+  if (!(value instanceof Date) || Number.isNaN(value.getTime())) {
+    return "";
+  }
+
+  return livePriceTimeFormatter.format(value);
+}
+
+function updateLivePriceStatus(state, syncedAt = lastLivePriceSyncAt) {
+  const statusElement = document.getElementById("livePriceStatus");
+  const timestampElement = document.getElementById("livePriceTimestamp");
+  const refreshButton = document.getElementById("refreshPricesButton");
+  const hasSyncedAtLeastOnce = syncedAt instanceof Date && !Number.isNaN(syncedAt.getTime());
+  const refreshIntervalSeconds = Math.round(LIVE_PRICE_REFRESH_INTERVAL_MS / 1000);
+  const shouldShowLocalServerHint = state === "error" && !hasSyncedAtLeastOnce && window.location.protocol === "file:";
+
+  if (statusElement) {
+    statusElement.classList.remove("is-syncing", "is-error");
+
+    if (state === "syncing") {
+      statusElement.textContent = "Syncing";
+      statusElement.classList.add("is-syncing");
+    } else if (state === "error") {
+      statusElement.textContent = "Retrying";
+      statusElement.classList.add("is-error");
+    } else if (hasSyncedAtLeastOnce) {
+      statusElement.textContent = "Live";
+    } else {
+      statusElement.textContent = "Waiting";
+    }
+  }
+
+  if (timestampElement) {
+    if (state === "syncing" && hasSyncedAtLeastOnce) {
+      timestampElement.textContent = `Refreshing prices. Last sync was ${formatLivePriceSyncTime(syncedAt)}.`;
+    } else if (state === "syncing") {
+      timestampElement.textContent = "Refreshing prices from NSE.";
+    } else if (shouldShowLocalServerHint) {
+      timestampElement.textContent = `Live prices need the local server. Run python main.py and open ${MARKET_DATA_API_FALLBACK_ORIGIN} to enable current market prices.`;
+    } else if (state === "error" && hasSyncedAtLeastOnce) {
+      timestampElement.textContent = `Using last synced prices from ${formatLivePriceSyncTime(syncedAt)}. Auto-retry runs every ${refreshIntervalSeconds} seconds.`;
+    } else if (state === "error") {
+      timestampElement.textContent = `Live prices are temporarily unavailable. Auto-retry runs every ${refreshIntervalSeconds} seconds.`;
+    } else if (hasSyncedAtLeastOnce) {
+      timestampElement.textContent = `Last synced from NSE at ${formatLivePriceSyncTime(syncedAt)}. Auto-refresh runs every ${refreshIntervalSeconds} seconds.`;
+    } else {
+      timestampElement.textContent = "NSE prices will start syncing after your portfolio loads.";
+    }
+  }
+
+  if (refreshButton) {
+    refreshButton.disabled = state === "syncing";
+    refreshButton.textContent = state === "syncing" ? "Refreshing..." : "Refresh";
+  }
+}
+
+async function fetchStockMasterSnapshot() {
+  let lastError = null;
+  const bundledSnapshot = getBundledStockMasterSnapshot();
+
+  if (window.location.protocol === "file:" && Object.keys(bundledSnapshot).length > 0) {
+    stockMasterSource = "bundled";
+    return bundledSnapshot;
+  }
+
+  for (const baseUrl of getMarketDataApiBaseUrls()) {
+    try {
+      const response = await fetch(new URL(STOCK_MASTER_API_PATH, baseUrl).toString(), {
+        cache: "no-store"
+      });
+
+      if (!response.ok) {
+        lastError = new Error(`Stock master request failed with status ${response.status}`);
+        continue;
+      }
+
+      const rows = await response.json();
+      const snapshot = buildStockMasterSnapshotFromApiRows(Array.isArray(rows) ? rows : []);
+
+      if (Object.keys(snapshot).length > 0) {
+        stockMasterSource = "api";
+        return snapshot;
+      }
+
+      lastError = new Error("Stock master API returned no NSE stocks.");
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  if (Object.keys(bundledSnapshot).length > 0) {
+    stockMasterSource = "bundled";
+    return bundledSnapshot;
+  }
+
+  throw lastError || new Error("Unable to reach the stock master API.");
+}
+
+function getTrackedPortfolioSymbols() {
+  const symbols = new Set();
+
+  getPortfolioStockRows().forEach(row => {
+    const symbol = String(row.dataset.symbol ?? "").trim().toUpperCase();
+
+    if (symbol) {
+      symbols.add(symbol);
+    }
+  });
+
+  return Array.from(symbols);
+}
+
+async function fetchNseLivePriceSnapshot(symbols = []) {
+  const normalizedSymbols = Array.from(new Set(
+    symbols
+      .map(symbol => String(symbol ?? "").trim().toUpperCase())
+      .filter(Boolean)
+  ));
+
+  if (normalizedSymbols.length === 0) {
+    return {};
+  }
+
+  let response = null;
+  let lastError = null;
+
+  for (const baseUrl of getMarketDataApiBaseUrls()) {
+    const requestUrl = new URL(NSE_LIVE_PRICE_API_PATH, baseUrl);
+    requestUrl.searchParams.set("symbols", normalizedSymbols.join(","));
+
+    try {
+      response = await fetch(requestUrl.toString(), {
+        cache: "no-store"
+      });
+
+      if (response.ok) {
+        break;
+      }
+
+      lastError = new Error(`NSE live quote request failed with status ${response.status}`);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  if (!response?.ok) {
+    throw lastError || new Error("Unable to reach the NSE live quote API.");
+  }
+
+  const payload = await response.json();
+  const quotes = payload?.quotes && typeof payload.quotes === "object" ? payload.quotes : {};
+  const nextMasterStocks = {};
+
+  Object.entries(quotes).forEach(([symbol, quote]) => {
+    const currentPrice = parseMoney(quote?.currentPrice);
+
+    if (currentPrice > 0) {
+      nextMasterStocks[symbol] = {
+        ...masterStocks[symbol],
+        name: String(quote?.name ?? masterStocks[symbol]?.name ?? symbol).trim(),
+        currentPrice,
+        lastUpdateTime: String(quote?.lastUpdateTime ?? "")
+      };
+    }
+  });
+
+  return nextMasterStocks;
+}
+
+function applyStockMasterSnapshot(snapshot) {
+  Object.entries(snapshot).forEach(([symbol, stock]) => {
+    masterStocks[symbol] = {
+      ...masterStocks[symbol],
+      ...stock
+    };
+  });
+}
+
+function updatePortfolioRowMarketValues(row) {
+  if (!row) {
+    return false;
+  }
+
+  const symbol = String(row.dataset.symbol ?? "").trim().toUpperCase();
+  const liveCurrentPrice = parseMoney(masterStocks[symbol]?.currentPrice);
+
+  if (liveCurrentPrice <= 0) {
+    return false;
+  }
+
+  const quantity = parseQuantity(row.dataset.quantity);
+  const avgPrice = parseMoney(row.dataset.avgPrice);
+  const previousCurrentPrice = parseMoney(row.dataset.currentPrice);
+  const previousCurrentValue = parseMoney(row.dataset.currentValue);
+  const previousPnl = parseMoney(row.dataset.pnl);
+  const { investedValue, currentValue, pnl } = calculatePortfolioValues(quantity, avgPrice, liveCurrentPrice);
+
+  row.dataset.currentPrice = liveCurrentPrice;
+  row.dataset.investedValue = investedValue;
+  row.dataset.currentValue = currentValue;
+  row.dataset.pnl = pnl;
+
+  const investedCell = document.getElementById(`invested-${row.id}`);
+  const currentPriceCell = document.getElementById(`currentPrice-${row.id}`);
+  const currentValueCell = document.getElementById(`currentValue-${row.id}`);
+  const pnlCell = document.getElementById(`pnl-${row.id}`);
+
+  if (investedCell) {
+    investedCell.innerText = formatCurrency(investedValue);
+  }
+
+  if (currentPriceCell) {
+    currentPriceCell.innerText = formatCurrency(liveCurrentPrice);
+  }
+
+  if (currentValueCell) {
+    currentValueCell.innerText = formatCurrency(currentValue);
+  }
+
+  if (pnlCell) {
+    pnlCell.innerText = formatSignedCurrency(pnl);
+    applyProfitClass(pnlCell, pnl);
+  }
+
+  return previousCurrentPrice !== liveCurrentPrice ||
+    previousCurrentValue !== currentValue ||
+    previousPnl !== pnl;
+}
+
+function syncPortfolioWithLatestPrices() {
+  const stockRows = getPortfolioStockRows();
+  let updatedRowCount = 0;
+
+  stockRows.forEach(row => {
+    if (updatePortfolioRowMarketValues(row)) {
+      updatedRowCount += 1;
+    }
+  });
+
+  if (stockRows.length > 0 && ["currentPrice", "currentValue", "pnl"].includes(currentSort.key)) {
+    applyCurrentSort();
+  } else {
+    updateSummary();
+  }
+
+  return updatedRowCount;
+}
+
+function startLivePriceRefreshLoop() {
+  if (livePriceRefreshTimer) {
+    window.clearInterval(livePriceRefreshTimer);
+  }
+
+  livePriceRefreshTimer = window.setInterval(() => {
+    refreshLivePrices();
+  }, LIVE_PRICE_REFRESH_INTERVAL_MS);
+}
+
+async function refreshLivePrices({ userInitiated = false } = {}) {
+  if (livePriceRefreshInFlight) {
+    return;
+  }
+
+  const trackedSymbols = getTrackedPortfolioSymbols();
+
+  if (trackedSymbols.length === 0) {
+    updateLivePriceStatus("idle");
+
+    if (userInitiated) {
+      showToast("Add a stock to refresh live NSE prices.", "warning");
+    }
+
+    return;
+  }
+
+  livePriceRefreshInFlight = true;
+  updateLivePriceStatus("syncing");
+
+  try {
+    const snapshot = await fetchNseLivePriceSnapshot(trackedSymbols);
+
+    if (Object.keys(snapshot).length === 0) {
+      throw new Error("NSE did not return live quotes for the tracked symbols.");
+    }
+
+    applyStockMasterSnapshot(snapshot);
+    syncPortfolioWithLatestPrices();
+    lastLivePriceSyncAt = new Date();
+    updateLivePriceStatus("live", lastLivePriceSyncAt);
+  } catch (error) {
+    console.error("Unable to refresh live prices", error);
+    updateLivePriceStatus("error");
+
+    if (userInitiated) {
+      showToast(error?.message || "Live NSE prices are temporarily unavailable.", "warning");
+    }
+  } finally {
+    livePriceRefreshInFlight = false;
+  }
+}
+
+function handleRefreshPricesClick() {
+  refreshLivePrices({
+    userInitiated: true
+  });
+}
+
+function handleVisibilityChange() {
+  if (document.visibilityState === "visible" && stockMasterLoaded) {
+    refreshLivePrices();
+  }
 }
 
 function normalizeEmail(value) {
@@ -2991,7 +4347,7 @@ function setAuthStatus(message = "") {
 
 function getStoredAuthState() {
   try {
-    return window.localStorage.getItem(AUTH_STORAGE_KEY) === "true";
+    return window.sessionStorage.getItem(AUTH_STORAGE_KEY) === "true";
   } catch (error) {
     return false;
   }
@@ -2999,26 +4355,40 @@ function getStoredAuthState() {
 
 function getStoredAuthProfile() {
   try {
-    const rawProfile = window.localStorage.getItem(AUTH_PROFILE_STORAGE_KEY);
+    const rawProfile = window.sessionStorage.getItem(AUTH_PROFILE_STORAGE_KEY);
     return rawProfile ? JSON.parse(rawProfile) : null;
   } catch (error) {
     return null;
   }
 }
 
+function clearLegacyAuthStorage() {
+  try {
+    window.localStorage.removeItem(AUTH_STORAGE_KEY);
+    window.localStorage.removeItem(AUTH_PROFILE_STORAGE_KEY);
+  } catch (error) {
+    // Ignore storage access issues and keep the in-memory flow working.
+  }
+}
+
 function setStoredAuthProfile(profile) {
   try {
     if (profile) {
-      window.localStorage.setItem(AUTH_PROFILE_STORAGE_KEY, JSON.stringify(profile));
+      window.sessionStorage.setItem(AUTH_PROFILE_STORAGE_KEY, JSON.stringify(profile));
     } else {
-      window.localStorage.removeItem(AUTH_PROFILE_STORAGE_KEY);
+      window.sessionStorage.removeItem(AUTH_PROFILE_STORAGE_KEY);
     }
   } catch (error) {
     // Ignore storage access issues and keep the in-memory flow working.
   }
 
+  if (!profile) {
+    clearLegacyAuthStorage();
+  }
+
   updateQuickMenuProfile(profile);
   updateEmailVerificationBanner(profile);
+  renderSettingsView(profile);
 }
 
 function setStoredAuthState(isAuthenticated) {
@@ -3029,12 +4399,16 @@ function setStoredAuthState(isAuthenticated) {
 
   try {
     if (isAuthenticated) {
-      window.localStorage.setItem(AUTH_STORAGE_KEY, "true");
+      window.sessionStorage.setItem(AUTH_STORAGE_KEY, "true");
     } else {
-      window.localStorage.removeItem(AUTH_STORAGE_KEY);
+      window.sessionStorage.removeItem(AUTH_STORAGE_KEY);
     }
   } catch (error) {
     // Ignore storage access issues and keep the in-memory flow working.
+  }
+
+  if (!isAuthenticated) {
+    clearLegacyAuthStorage();
   }
 }
 
@@ -3070,77 +4444,195 @@ function handleSidePanelBackdropClick(event) {
   }
 }
 
+function getAppPageButtons() {
+  return Array.from(document.querySelectorAll("[data-app-page-target]"));
+}
+
+function switchAppPage(page = "home", { closeMenu = true } = {}) {
+  const nextPage = ["home", "dashboard", "settings"].includes(page) ? page : "home";
+  const pageIds = {
+    home: "homePageView",
+    dashboard: "dashboardPageView",
+    settings: "settingsPageView"
+  };
+
+  currentAppPage = nextPage;
+
+  Object.entries(pageIds).forEach(([pageName, elementId]) => {
+    document.getElementById(elementId)?.classList.toggle("is-active", pageName === nextPage);
+  });
+
+  getAppPageButtons().forEach(button => {
+    const isActive = button.dataset.appPageTarget === nextPage;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  });
+
+  if (closeMenu) {
+    closeSidePanel();
+  }
+
+  if (nextPage === "dashboard") {
+    renderDashboardView();
+  } else if (nextPage === "settings") {
+    renderSettingsView();
+  }
+}
+
+function renderDashboardView() {
+  const dashboardSummary = document.getElementById("dashboardSummary");
+  const dashboardGrid = document.getElementById("dashboardGrid");
+  const profile = getStoredAuthProfile();
+
+  if (!dashboardSummary || !dashboardGrid) {
+    return;
+  }
+
+  const renderDashboardEmptyState = (summary, message) => {
+    dashboardSummary.textContent = summary;
+    dashboardGrid.classList.add("is-empty");
+    dashboardGrid.classList.remove("is-scrollable");
+    dashboardGrid.innerHTML = `<div class="page-empty-card">${message}</div>`;
+  };
+
+  if (!profile?.userId) {
+    renderDashboardEmptyState("Sign in to view your portfolio boxes.", "Sign in to load your stocks here.");
+    return;
+  }
+
+  if (!profile.emailVerified) {
+    renderDashboardEmptyState(
+      "Verify your email to view the dashboard boxes.",
+      escapeHtml(getUnverifiedDashboardMessage())
+    );
+    return;
+  }
+
+  const stockRows = getPortfolioStockRows();
+
+  if (stockRows.length === 0) {
+    renderDashboardEmptyState(
+      "Add stocks on the Home page to build this dashboard.",
+      "No tracked stocks yet. Add your first stock on the Home page."
+    );
+    return;
+  }
+
+  dashboardGrid.classList.remove("is-empty");
+  dashboardGrid.classList.toggle("is-scrollable", stockRows.length > 50);
+  dashboardSummary.textContent = `${stockRows.length} tracked stock${stockRows.length === 1 ? "" : "s"} shown as responsive profit and loss cards.`;
+  dashboardGrid.innerHTML = stockRows.map(row => {
+    const symbol = escapeHtml(String(row.dataset.symbol || "").trim().toUpperCase() || "STOCK");
+    const demat = escapeHtml(getDematDisplayValue(row.dataset.demat));
+    const pnl = parseMoney(row.dataset.pnl);
+    const toneClass = pnl > 0 ? "is-positive" : pnl < 0 ? "is-negative" : "is-neutral";
+    const pnlClass = pnl > 0 ? "profit-positive" : pnl < 0 ? "profit-negative" : "profit-neutral";
+    const pnlDisplay = formatSignedCurrency(pnl);
+
+    return `
+      <article class="dashboard-card ${toneClass}">
+        <p class="dashboard-card-symbol" title="${symbol}">${symbol}</p>
+        <p class="dashboard-card-demat" title="${demat}">${demat}</p>
+        <p class="dashboard-card-pnl ${pnlClass}" title="${pnlDisplay}">${pnlDisplay}</p>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderSettingsView(profile = getStoredAuthProfile()) {
+  const settingsProfileName = document.getElementById("settingsProfileName");
+  const settingsProfileEmail = document.getElementById("settingsProfileEmail");
+  const settingsProfileStatus = document.getElementById("settingsProfileStatus");
+  const settingsVerifyEmailButton = document.getElementById("settingsVerifyEmailButton");
+  const actionButtons = [
+    "settingsViewProfileButton",
+    "settingsChangeEmailButton",
+    "settingsChangePasswordButton",
+    "settingsDeleteAccountButton",
+    "settingsLogoutButton"
+  ].map(id => document.getElementById(id)).filter(Boolean);
+  const safeProfile = profile && typeof profile === "object" ? profile : null;
+  const isSignedIn = Boolean(safeProfile?.userId);
+  const isEmailVerified = Boolean(safeProfile?.emailVerified);
+  const shouldShowVerifyButton = Boolean(isSignedIn && safeProfile?.email && !isEmailVerified);
+
+  if (settingsProfileName) {
+    settingsProfileName.textContent = isSignedIn ? formatProfileDisplayName(safeProfile) : DEFAULT_ACCOUNT_NAME;
+  }
+
+  if (settingsProfileEmail) {
+    settingsProfileEmail.textContent = isSignedIn
+      ? (normalizeEmail(safeProfile.email || "") || "No email address linked yet.")
+      : "Sign in to manage your account details.";
+  }
+
+  if (settingsProfileStatus) {
+    settingsProfileStatus.textContent = !isSignedIn
+      ? "No active account."
+      : isEmailVerified
+        ? "Email verified. Dashboard access is unlocked."
+        : "Email verification is pending.";
+  }
+
+  actionButtons.forEach(button => {
+    button.disabled = !isSignedIn;
+  });
+
+  if (settingsVerifyEmailButton) {
+    settingsVerifyEmailButton.disabled = !shouldShowVerifyButton;
+    settingsVerifyEmailButton.classList.toggle("hidden", !shouldShowVerifyButton);
+  }
+}
+
+function refreshSecondaryViews() {
+  renderDashboardView();
+  renderSettingsView();
+}
+
 function updateQuickMenuProfile(profile = getStoredAuthProfile()) {
   const profileName = document.getElementById("sidePanelProfileName");
   const profileMeta = document.getElementById("sidePanelProfileMeta");
   const emailStatus = document.getElementById("sidePanelEmailStatus");
-  const verifiedBadge = document.getElementById("sidePanelVerifiedBadge");
   const profileButton = document.getElementById("profileButton");
-  const changeEmailButton = document.getElementById("changeEmailButton");
   const verifyEmailButton = document.getElementById("verifyEmailButton");
-  const verifyEmailButtonTick = document.getElementById("verifyEmailButtonTick");
+  const deleteAccountButton = document.getElementById("deleteAccountButton");
   const verifyEmailButtonLabel = document.getElementById("verifyEmailButtonLabel");
   const safeProfile = profile && typeof profile === "object" ? profile : null;
-  const displayName = formatUserDisplayName(safeProfile?.firstName || safeProfile?.username || DEFAULT_ACCOUNT_NAME);
-  const detailParts = [
-    safeProfile?.email ? normalizeEmail(safeProfile.email) : ""
-  ].filter(Boolean);
+  const displayName = formatProfileDisplayName(safeProfile);
   const hasEmail = Boolean(safeProfile?.email);
   const isEmailVerified = Boolean(safeProfile?.emailVerified);
+  const shouldShowVerifyButton = Boolean(safeProfile?.userId && hasEmail && !isEmailVerified);
 
   if (profileName) {
     profileName.textContent = displayName;
   }
 
   if (profileMeta) {
-    profileMeta.textContent = detailParts.length
-      ? detailParts.join(" | ")
-      : "Sign in to manage your account details.";
+    profileMeta.textContent = "";
+    profileMeta.classList.add("hidden");
   }
 
   if (emailStatus) {
-    emailStatus.textContent = !hasEmail
-      ? "Add an email address to enable email sign-in."
-      : isEmailVerified
-        ? "Email verified. Full dashboard access unlocked."
-        : "Verify this email to unlock dashboard services.";
+    emailStatus.textContent = "";
+    emailStatus.classList.add("hidden");
   }
-
-  verifiedBadge?.classList.toggle("hidden", !isEmailVerified);
 
   if (profileButton) {
     profileButton.disabled = !safeProfile?.userId;
   }
 
-  if (changeEmailButton) {
-    changeEmailButton.disabled = !safeProfile?.userId;
-  }
-
   if (verifyEmailButton) {
-    verifyEmailButton.disabled = !safeProfile?.userId || !hasEmail || isEmailVerified;
+    verifyEmailButton.disabled = !shouldShowVerifyButton;
+    verifyEmailButton.classList.toggle("hidden", !shouldShowVerifyButton);
   }
 
-  verifyEmailButtonTick?.classList.toggle("hidden", !isEmailVerified);
+  if (deleteAccountButton) {
+    deleteAccountButton.disabled = !safeProfile?.userId;
+  }
 
   if (verifyEmailButtonLabel) {
-    verifyEmailButtonLabel.textContent = isEmailVerified ? "Verified" : "Verify Email";
+    verifyEmailButtonLabel.textContent = "Verify Email";
   }
-}
-
-function buildProfileDialogContent(profile = {}) {
-  const displayName = escapeHtml(formatUserDisplayName(profile.firstName || profile.username || DEFAULT_ACCOUNT_NAME));
-  const uniqueNumber = escapeHtml(String(profile.uniqueNumber || "Not assigned"));
-  const email = escapeHtml(normalizeEmail(profile.email || "") || "Not available");
-  const emailStatus = profile.emailVerified ? "Verified" : "Not verified";
-
-  return `
-    <div class="space-y-3 text-left">
-      <div><span class="dialog-field-name">Name</span><br><span>${displayName}</span></div>
-      <div><span class="dialog-field-name">Email</span><br><span>${email}</span></div>
-      <div><span class="dialog-field-name">Account ID</span><br><span>${uniqueNumber}</span></div>
-      <div><span class="dialog-field-name">Email Status</span><br><span>${emailStatus}</span></div>
-    </div>
-  `;
 }
 
 function handleProfileButtonClick() {
@@ -3151,12 +4643,281 @@ function handleProfileButtonClick() {
     return;
   }
 
-  showValueDialog(buildProfileDialogContent(profile));
+  closeSidePanel();
+  showProfileDialog(profile);
+}
+
+function showProfileDialog(profile) {
+  const content = document.getElementById("profileContent");
+  if (!content) return;
+
+  content.innerHTML = buildProfileViewContent(profile);
+  setProfileDialogActionState("view");
+  openDialog("profileDialog");
+}
+
+function buildProfileViewContent(profile) {
+  const safeProfile = profile && typeof profile === "object" ? profile : {};
+  const firstName = escapeHtml(formatNamePart(safeProfile.firstName || "") || "Not set");
+  const lastName = escapeHtml(formatNamePart(safeProfile.lastName || "") || "Not set");
+  const email = escapeHtml(normalizeEmail(safeProfile.email || "") || "Not available");
+  const emailStatus = safeProfile.emailVerified ? "Verified" : "Verification pending";
+
+  return `
+    <div><span class="dialog-field-name">First Name</span><br><span>${firstName}</span></div>
+    <div><span class="dialog-field-name">Last Name</span><br><span>${lastName}</span></div>
+    <div><span class="dialog-field-name">Email</span><br><span>${email}</span></div>
+    <div><span class="dialog-field-name">Email Status</span><br><span>${emailStatus}</span></div>
+  `;
+}
+
+function setProfileDialogActionState(mode = "view") {
+  const editButton = document.getElementById("profileEditButton");
+  const closeButton = document.getElementById("profileCloseButton");
+
+  if (editButton) {
+    editButton.dataset.mode = mode;
+    editButton.textContent = mode === "edit" ? "Save" : "Edit";
+  }
+
+  if (closeButton) {
+    closeButton.textContent = mode === "edit" ? "Cancel" : "Close";
+  }
+}
+
+function clearProfileEditFeedback() {
+  const errorElement = document.getElementById("profileEditError");
+
+  if (!errorElement) {
+    return;
+  }
+
+  errorElement.textContent = "";
+  errorElement.classList.add("hidden");
+}
+
+function bindProfileEditInputs() {
+  const firstNameInput = document.getElementById("profileFirstName");
+  const lastNameInput = document.getElementById("profileLastName");
+  const emailInput = document.getElementById("profileEmail");
+
+  firstNameInput?.addEventListener("input", event => {
+    event.target.value = sanitizeNameInputValue(event.target.value);
+    clearProfileEditFeedback();
+  });
+  lastNameInput?.addEventListener("input", event => {
+    event.target.value = sanitizeNameInputValue(event.target.value);
+    clearProfileEditFeedback();
+  });
+  firstNameInput?.addEventListener("blur", event => {
+    event.target.value = formatNamePart(event.target.value);
+  });
+  lastNameInput?.addEventListener("blur", event => {
+    event.target.value = formatNamePart(event.target.value);
+  });
+  emailInput?.addEventListener("input", event => {
+    event.target.value = normalizeEmail(event.target.value);
+    clearProfileEditFeedback();
+  });
+
+  requestAnimationFrame(() => firstNameInput?.focus());
+}
+
+async function handleProfileEditClick() {
+  const editButton = document.getElementById("profileEditButton");
+  const mode = editButton?.dataset.mode || "view";
+
+  if (mode === "edit") {
+    await handleProfileSaveClick();
+    return;
+  }
+
+  const profile = getStoredAuthProfile();
+  const content = document.getElementById("profileContent");
+  if (!content || !profile) return;
+
+  content.innerHTML = buildProfileEditContent(profile);
+  setProfileDialogActionState("edit");
+  bindProfileEditInputs();
+}
+
+function buildProfileEditContent(profile) {
+  const firstName = escapeHtml(formatNamePart(profile.firstName || ""));
+  const lastName = escapeHtml(formatNamePart(profile.lastName || ""));
+  const email = escapeHtml(normalizeEmail(profile.email || ""));
+
+  return `
+    <div id="profileEditForm" class="space-y-4">
+      <div class="auth-fields-grid auth-fields-grid-two">
+        <div>
+          <label for="profileFirstName" class="mb-2 block text-[0.8rem] font-black tracking-[0.04em] text-white/55">
+            First Name
+          </label>
+          <input id="profileFirstName" type="text" class="auth-input" value="${firstName}" autocomplete="given-name">
+        </div>
+        <div>
+          <label for="profileLastName" class="mb-2 block text-[0.8rem] font-black tracking-[0.04em] text-white/55">
+            Last Name
+          </label>
+          <input id="profileLastName" type="text" class="auth-input" value="${lastName}" autocomplete="family-name">
+        </div>
+      </div>
+      <div>
+        <label for="profileEmail" class="mb-2 block text-[0.8rem] font-black tracking-[0.04em] text-white/55">
+          Email Address
+        </label>
+        <input id="profileEmail" type="email" class="auth-input" value="${email}" autocomplete="email">
+      </div>
+      <p class="text-xs leading-5 text-zinc-300/72">
+        Updating your email will require verification again before the dashboard unlocks live portfolio actions.
+      </p>
+      <p id="profileEditError" class="auth-error hidden" aria-live="polite"></p>
+    </div>
+  `;
+}
+
+async function handleProfileSaveClick() {
+  const profile = getStoredAuthProfile();
+  const firstNameInput = document.getElementById("profileFirstName");
+  const lastNameInput = document.getElementById("profileLastName");
+  const emailInput = document.getElementById("profileEmail");
+
+  const firstName = formatNamePart(firstNameInput?.value || "");
+  const lastName = formatNamePart(lastNameInput?.value || "");
+  const newEmail = normalizeEmail(emailInput?.value || "");
+
+  const errorElement = document.getElementById("profileEditError");
+  clearProfileEditFeedback();
+
+  if (!firstName) {
+    if (errorElement) {
+      errorElement.textContent = "First name cannot be empty.";
+      errorElement.classList.remove("hidden");
+    }
+    return;
+  }
+
+  if (!isValidNameValue(firstName)) {
+    if (errorElement) {
+      errorElement.textContent = "Enter a valid first name.";
+      errorElement.classList.remove("hidden");
+    }
+    return;
+  }
+
+  if (lastName && !isValidNameValue(lastName)) {
+    if (errorElement) {
+      errorElement.textContent = "Enter a valid last name.";
+      errorElement.classList.remove("hidden");
+    }
+    return;
+  }
+
+  if (!isValidGmailAddress(newEmail)) {
+    if (errorElement) {
+      errorElement.textContent = "Enter a valid email address.";
+      errorElement.classList.remove("hidden");
+    }
+    return;
+  }
+
+  const currentEmail = normalizeEmail(profile.email || "");
+  const emailChanged = newEmail !== currentEmail;
+
+  try {
+    if (emailChanged) {
+      const knownUsers = await getAllKnownUsers();
+      const conflictUser = knownUsers.find(user => user.docId !== profile.userId && user.email === newEmail);
+
+      if (conflictUser) {
+        if (errorElement) {
+          errorElement.textContent = "Another account already exists with this email address.";
+          errorElement.classList.remove("hidden");
+        }
+        return;
+      }
+    }
+
+    const updatedAt = new Date().toISOString();
+    const updatePayload = {
+      firstName,
+      lastName,
+      updatedAt
+    };
+
+    let updatedProfile = {
+      ...profile,
+      firstName,
+      lastName
+    };
+
+    if (emailChanged) {
+      Object.assign(updatePayload, {
+        email: newEmail,
+        emailVerified: false,
+        emailVerifiedAt: ""
+      });
+
+      updatedProfile = {
+        ...updatedProfile,
+        email: newEmail,
+        emailVerified: false,
+        emailVerifiedAt: ""
+      };
+    }
+
+    await updateDoc(doc(db, USERS_COLLECTION_NAME, profile.userId), updatePayload);
+
+    if (emailChanged) {
+      try {
+        await sendAccountVerificationLink(updatedProfile, { showSuccessToast: false });
+        showToast(`Email updated to ${newEmail}. Verify it to unlock the dashboard.`, "warning");
+      } catch (verificationError) {
+        showToast(`Email updated to ${newEmail}. ${getFriendlyFirebaseErrorMessage(verificationError, { flow: "email-link" })}`, "error");
+      }
+    }
+
+    setStoredAuthProfile(updatedProfile);
+    updateWelcomeMessage(updatedProfile);
+    hideProfileDialog();
+    showToast("Profile updated successfully.", "success");
+  } catch (error) {
+    if (errorElement) {
+      errorElement.textContent = getFriendlyFirebaseErrorMessage(error);
+      errorElement.classList.remove("hidden");
+    }
+  }
+}
+
+function hideProfileDialog() {
+  closeDialog("profileDialog");
+  setProfileDialogActionState("view");
+}
+
+async function verifyPassword(profile, password) {
+  try {
+    const passwordHash = await sha256Hex(password);
+    const userDoc = await getDoc(doc(db, USERS_COLLECTION_NAME, profile.userId));
+    const storedUser = userDoc.data();
+
+    if (!storedUser) {
+      return false;
+    }
+
+    return doesPasswordMatch(storedUser, passwordHash, password);
+  } catch (error) {
+    console.error("Password verification failed:", error);
+    return false;
+  }
 }
 
 async function sendAccountVerificationLink(profile, { showSuccessToast = true } = {}) {
   if (!profile?.userId) {
     throw new Error("Please sign in to verify your email address.");
+  }
+
+  if (isLocalTestProfile(profile)) {
+    throw new Error("This local admin test account email cannot be verified here.");
   }
 
   const email = normalizeEmail(profile.email || "");
@@ -3193,6 +4954,11 @@ async function handleVerifyEmailButtonClick() {
     return;
   }
 
+  if (isLocalTestProfile(profile)) {
+    showValueDialog("This local admin test account email cannot be verified here.");
+    return;
+  }
+
   if (!profile?.email) {
     showValueDialog("No email address is linked to this account yet.");
     return;
@@ -3204,6 +4970,7 @@ async function handleVerifyEmailButtonClick() {
   }
 
   try {
+    closeSidePanel();
     await sendAccountVerificationLink(profile);
   } catch (error) {
     showValueDialog(getFriendlyFirebaseErrorMessage(error, {
@@ -3222,6 +4989,11 @@ function showChangeEmailDialog() {
 
   if (!profile?.userId) {
     showValueDialog("Please sign in to update your email address.");
+    return;
+  }
+
+  if (isLocalTestProfile(profile)) {
+    showValueDialog("This local admin test account email cannot be changed here.");
     return;
   }
 
@@ -3273,6 +5045,11 @@ async function handleChangeEmailSubmit(event) {
 
   if (!profile?.userId) {
     setFieldError("changeEmailError", "Please sign in again and try updating your email address.");
+    return;
+  }
+
+  if (isLocalTestProfile(profile)) {
+    setFieldError("changeEmailError", "This local admin test account email cannot be changed here.");
     return;
   }
 
@@ -3340,6 +5117,391 @@ async function handleChangeEmailSubmit(event) {
   }
 }
 
+function clearUpdateProfileFeedback() {
+  setFieldError("updateProfileError", "");
+  setFieldError("updateProfileStatus", "");
+}
+
+function showUpdateProfileDialog() {
+  const profile = getStoredAuthProfile();
+
+  if (!profile?.userId) {
+    showValueDialog("Please sign in to update your profile.");
+    return;
+  }
+
+  if (isLocalTestProfile(profile)) {
+    showValueDialog("This local admin test account profile cannot be changed here.");
+    return;
+  }
+
+  const firstNameInput = document.getElementById("updateProfileFirstName");
+  const lastNameInput = document.getElementById("updateProfileLastName");
+
+  if (firstNameInput) {
+    firstNameInput.value = formatNamePart(profile.firstName || "");
+  }
+
+  if (lastNameInput) {
+    lastNameInput.value = formatNamePart(profile.lastName || "");
+  }
+
+  clearUpdateProfileFeedback();
+  openDialog("updateProfileDialog");
+  requestAnimationFrame(() => firstNameInput?.focus());
+}
+
+function hideUpdateProfileDialog({ clearFields = false } = {}) {
+  closeDialog("updateProfileDialog");
+  clearUpdateProfileFeedback();
+
+  if (!clearFields) {
+    return;
+  }
+
+  const firstNameInput = document.getElementById("updateProfileFirstName");
+  const lastNameInput = document.getElementById("updateProfileLastName");
+
+  if (firstNameInput) {
+    firstNameInput.value = "";
+  }
+
+  if (lastNameInput) {
+    lastNameInput.value = "";
+  }
+}
+
+async function handleUpdateProfileSubmit(event) {
+  event.preventDefault();
+
+  const profile = getStoredAuthProfile();
+  const firstNameInput = document.getElementById("updateProfileFirstName");
+  const lastNameInput = document.getElementById("updateProfileLastName");
+  const firstName = formatNamePart(firstNameInput?.value || "");
+  const lastName = formatNamePart(lastNameInput?.value || "");
+
+  clearUpdateProfileFeedback();
+
+  if (!profile?.userId) {
+    setFieldError("updateProfileError", "Please sign in again and try updating your profile.");
+    return;
+  }
+
+  if (isLocalTestProfile(profile)) {
+    setFieldError("updateProfileError", "This local admin test account profile cannot be changed here.");
+    return;
+  }
+
+  if (!firstName) {
+    setFieldError("updateProfileError", "First name cannot be empty.");
+    firstNameInput?.focus();
+    return;
+  }
+
+  if (!isValidNameValue(firstName)) {
+    setFieldError("updateProfileError", "Enter a valid first name.");
+    firstNameInput?.focus();
+    firstNameInput?.select();
+    return;
+  }
+
+  if (lastName && !isValidNameValue(lastName)) {
+    setFieldError("updateProfileError", "Enter a valid last name.");
+    lastNameInput?.focus();
+    lastNameInput?.select();
+    return;
+  }
+
+  try {
+    setFieldError("updateProfileStatus", "Saving profile...");
+    await updateDoc(doc(db, USERS_COLLECTION_NAME, profile.userId), {
+      firstName,
+      lastName,
+      updatedAt: new Date().toISOString()
+    });
+
+    const updatedProfile = {
+      ...profile,
+      firstName,
+      lastName
+    };
+
+    setStoredAuthProfile(updatedProfile);
+    updateWelcomeMessage(updatedProfile);
+    hideUpdateProfileDialog({
+      clearFields: true
+    });
+    showToast("Profile updated successfully.", "success");
+  } catch (error) {
+    setFieldError("updateProfileStatus", "");
+    setFieldError("updateProfileError", getFriendlyFirebaseErrorMessage(error));
+  }
+}
+
+function clearChangePasswordFeedback() {
+  setFieldError("changePasswordError", "");
+  setFieldError("changePasswordStatus", "");
+}
+
+function showChangePasswordDialog() {
+  const profile = getStoredAuthProfile();
+
+  if (!profile?.userId) {
+    showValueDialog("Please sign in to update your password.");
+    return;
+  }
+
+  if (isLocalTestProfile(profile)) {
+    showValueDialog("This local admin test account password cannot be changed here.");
+    return;
+  }
+
+  clearChangePasswordFeedback();
+  openDialog("changePasswordDialog");
+  requestAnimationFrame(() => document.getElementById("changePasswordCurrent")?.focus());
+}
+
+function hideChangePasswordDialog({ clearFields = false } = {}) {
+  closeDialog("changePasswordDialog");
+  clearChangePasswordFeedback();
+
+  if (!clearFields) {
+    return;
+  }
+
+  [
+    "changePasswordCurrent",
+    "changePasswordNew",
+    "changePasswordConfirm"
+  ].forEach(inputId => {
+    const input = document.getElementById(inputId);
+
+    if (input) {
+      input.value = "";
+      setPasswordVisibility(inputId, false);
+    }
+  });
+}
+
+function validateChangePasswordForm() {
+  const currentPassword = String(document.getElementById("changePasswordCurrent")?.value || "");
+  const newPassword = String(document.getElementById("changePasswordNew")?.value || "");
+  const confirmPassword = String(document.getElementById("changePasswordConfirm")?.value || "");
+
+  clearChangePasswordFeedback();
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    setFieldError("changePasswordError", "Fill in all password fields.");
+    return null;
+  }
+
+  if (newPassword.length < 8) {
+    setFieldError("changePasswordError", "New password must be at least 8 characters long.");
+    return null;
+  }
+
+  if (newPassword !== confirmPassword) {
+    setFieldError("changePasswordError", "New password and confirmation password must match.");
+    return null;
+  }
+
+  if (currentPassword === newPassword) {
+    setFieldError("changePasswordError", "Choose a different new password.");
+    return null;
+  }
+
+  return {
+    currentPassword,
+    newPassword
+  };
+}
+
+async function handleChangePasswordSubmit(event) {
+  event.preventDefault();
+
+  const profile = getStoredAuthProfile();
+  const formData = validateChangePasswordForm();
+
+  if (!formData) {
+    return;
+  }
+
+  if (!profile?.userId) {
+    setFieldError("changePasswordError", "Please sign in again and try updating your password.");
+    return;
+  }
+
+  if (isLocalTestProfile(profile)) {
+    setFieldError("changePasswordError", "This local admin test account password cannot be changed here.");
+    return;
+  }
+
+  try {
+    setFieldError("changePasswordStatus", "Updating password...");
+    const knownUsers = await getAllKnownUsers();
+    const matchedUser = findUserByDocId(knownUsers, profile.userId);
+
+    if (!matchedUser?.docId) {
+      throw new Error("We could not find this account anymore. Please sign in again.");
+    }
+
+    const currentPasswordHash = await sha256Hex(formData.currentPassword);
+
+    if (!doesPasswordMatch(matchedUser, currentPasswordHash, formData.currentPassword)) {
+      setFieldError("changePasswordStatus", "");
+      setFieldError("changePasswordError", "Current password is incorrect.");
+      document.getElementById("changePasswordCurrent")?.focus();
+      document.getElementById("changePasswordCurrent")?.select();
+      return;
+    }
+
+    const newPasswordHash = await sha256Hex(formData.newPassword);
+    await updateDoc(doc(db, USERS_COLLECTION_NAME, profile.userId), {
+      passwordHash: newPasswordHash,
+      passwordUpdatedAt: new Date().toISOString()
+    });
+
+    hideChangePasswordDialog({
+      clearFields: true
+    });
+    showToast("Password updated successfully.", "success");
+  } catch (error) {
+    setFieldError("changePasswordStatus", "");
+    setFieldError("changePasswordError", getFriendlyFirebaseErrorMessage(error));
+  }
+}
+
+function buildDeleteAccountDialogMessage(profile = {}) {
+  const safeProfile = profile && typeof profile === "object" ? profile : {};
+  const accountLabel = escapeHtml(formatProfileDisplayName(safeProfile) || "this account");
+  return `Are you sure you want to remove ${accountLabel}? This will delete your profile and saved portfolio.`;
+}
+
+function showDeleteAccountDialog() {
+  const profile = getStoredAuthProfile();
+
+  if (!profile?.userId) {
+    showValueDialog("Please sign in to delete your account.");
+    return;
+  }
+
+  if (isLocalTestProfile(profile)) {
+    showValueDialog("This local admin test account cannot be deleted here.");
+    return;
+  }
+
+  closeSidePanel();
+  const messageElement = document.getElementById("deleteAccountMessage");
+
+  if (messageElement) {
+    messageElement.innerHTML = buildDeleteAccountDialogMessage(profile);
+  }
+
+  openDialog("deleteAccountDialog");
+}
+
+function hideDeleteAccountDialog() {
+  closeDialog("deleteAccountDialog");
+}
+
+async function performLogoutFlow({ focusField = true, resetFields = true } = {}) {
+  setStoredAuthState(false);
+  setStoredAuthProfile(null);
+  switchAppPage("home", {
+    closeMenu: false
+  });
+  clearPasswordResetSession();
+  clearEmailLinkAuthSession();
+  clearSignupDraft();
+  updateWelcomeMessage(DEFAULT_ACCOUNT_NAME);
+  resetSearchInput();
+  closeSidePanel();
+  await signOut(auth).catch(() => {});
+  hideForgotPasswordDialog({
+    clearFields: true
+  });
+  hideResetPasswordDialog();
+  hideDeleteConfirmDialog();
+  hideChangeEmailDialog({
+    clearFields: true
+  });
+  hideUpdateProfileDialog({
+    clearFields: true
+  });
+  hideChangePasswordDialog({
+    clearFields: true
+  });
+  hideDeleteAccountDialog();
+  clearPortfolioTable({
+    message: "Sign in to load your saved portfolio."
+  });
+  updateLivePriceStatus("idle");
+  showLandingOverlay({
+    focusField,
+    resetFields,
+    mode: "signin"
+  });
+}
+
+async function handleDeleteAccountConfirm() {
+  const profile = getStoredAuthProfile();
+  const confirmButton = document.getElementById("deleteAccountConfirm");
+  const previousLabel = confirmButton?.textContent || "Delete";
+
+  if (!profile?.userId) {
+    hideDeleteAccountDialog();
+    await performLogoutFlow();
+    return;
+  }
+
+  if (isLocalTestProfile(profile)) {
+    hideDeleteAccountDialog();
+    showValueDialog("This local admin test account cannot be deleted here.");
+    return;
+  }
+
+  try {
+    if (confirmButton) {
+      confirmButton.disabled = true;
+      confirmButton.textContent = "Deleting...";
+    }
+
+    const knownUsers = await loadUsersFromFirebase();
+    const userIdsToDelete = collectAccountDeletionTargets(knownUsers, profile);
+    const portfolioSnapshots = await Promise.all(
+      userIdsToDelete.map(userId => getDocs(query(
+        collection(db, PORTFOLIO_COLLECTION_NAME),
+        where("userId", "==", userId)
+      )))
+    );
+    const portfolioRefsToDelete = Array.from(new Map(
+      portfolioSnapshots
+        .flatMap(snapshot => snapshot.docs)
+        .map(docSnap => [docSnap.ref.path, docSnap.ref])
+    ).values());
+
+    await Promise.all(portfolioRefsToDelete.map(ref => deleteDoc(ref)));
+    await Promise.all(
+      userIdsToDelete.map(userId => deleteDoc(doc(db, USERS_COLLECTION_NAME, userId)))
+    );
+
+    if (auth.currentUser && normalizeEmail(auth.currentUser.email || "") === normalizeEmail(profile.email || "")) {
+      await deleteUser(auth.currentUser).catch(() => {});
+    }
+
+    hideDeleteAccountDialog();
+    await performLogoutFlow();
+    showToast("We really miss you. Your account has been deleted successfully.", "success");
+  } catch (error) {
+    showValueDialog("We couldn't delete your account right now. Please try again.");
+  } finally {
+    if (confirmButton) {
+      confirmButton.disabled = false;
+      confirmButton.textContent = previousLabel;
+    }
+  }
+}
+
 function handleGlobalKeydown(event) {
   if (event.key === "Escape") {
     closeSidePanel();
@@ -3348,6 +5510,10 @@ function handleGlobalKeydown(event) {
     });
     hideResetPasswordDialog();
     hideChangeEmailDialog();
+    hideUpdateProfileDialog();
+    hideChangePasswordDialog();
+    hideDeleteAccountDialog();
+    hideProfileDialog();
   }
 }
 
@@ -3391,7 +5557,12 @@ function clearAuthInputs() {
     "signupConfirmPassword",
     "forgotPasswordEmail",
     "resetPassword",
-    "resetPasswordConfirm"
+    "resetPasswordConfirm",
+    "updateProfileFirstName",
+    "updateProfileLastName",
+    "changePasswordCurrent",
+    "changePasswordNew",
+    "changePasswordConfirm"
   ].forEach(inputId => {
     const input = document.getElementById(inputId);
 
@@ -3419,6 +5590,8 @@ function clearAuthInputs() {
   resetSignupSuccessState();
   clearForgotPasswordFeedback();
   clearResetPasswordFeedback();
+  clearUpdateProfileFeedback();
+  clearChangePasswordFeedback();
 }
 
 function switchAuthMode(mode, { focusField = true, resetErrors = false } = {}) {
@@ -3584,9 +5757,12 @@ function isLegacyRemovedUserIdentity({ email = "", phone = "" } = {}) {
 }
 
 function buildNormalizedUserRecord(sourceRecord = {}, source = "firebase", docId = "") {
+  const uniqueNumber = String(sourceRecord.uniqueNumber ?? sourceRecord.unique_number ?? sourceRecord.id ?? "").trim();
+
   return {
     docId: String(docId || sourceRecord.docId || sourceRecord.userId || "").trim(),
-    uniqueNumber: String(sourceRecord.uniqueNumber ?? sourceRecord.unique_number ?? sourceRecord.id ?? "").trim(),
+    uniqueNumber,
+    userSequence: normalizePositiveInteger(sourceRecord.userSequence ?? sourceRecord.user_sequence) || extractUserSequenceFromAccountId(uniqueNumber),
     firstName: formatNamePart(sourceRecord.firstName ?? sourceRecord.first_name ?? ""),
     lastName: formatNamePart(sourceRecord.lastName ?? sourceRecord.last_name ?? ""),
     email: normalizeEmail(sourceRecord.email ?? sourceRecord.emailId ?? sourceRecord["E-mail"] ?? ""),
@@ -3600,15 +5776,18 @@ function buildNormalizedUserRecord(sourceRecord = {}, source = "firebase", docId
 }
 
 function buildStoredAuthProfile(user = {}) {
+  const safeUser = user && typeof user === "object" ? user : {};
+
   return {
-    userId: String(user.docId ?? "").trim(),
-    uniqueNumber: String(user.uniqueNumber ?? "").trim(),
-    firstName: formatNamePart(user.firstName ?? ""),
-    lastName: formatNamePart(user.lastName ?? ""),
-    email: normalizeEmail(user.email ?? ""),
-    username: normalizeAuthIdentifier(user.username ?? ""),
-    emailVerified: Boolean(user.emailVerified),
-    emailVerifiedAt: String(user.emailVerifiedAt ?? "").trim()
+    userId: String(safeUser.docId ?? "").trim(),
+    uniqueNumber: String(safeUser.uniqueNumber ?? "").trim(),
+    userSequence: getUserSequence(safeUser),
+    firstName: formatNamePart(safeUser.firstName ?? ""),
+    lastName: formatNamePart(safeUser.lastName ?? ""),
+    email: normalizeEmail(safeUser.email ?? ""),
+    username: normalizeAuthIdentifier(safeUser.username ?? ""),
+    emailVerified: Boolean(safeUser.emailVerified),
+    emailVerifiedAt: String(safeUser.emailVerifiedAt ?? "").trim()
   };
 }
 
@@ -3685,12 +5864,28 @@ async function sha256Hex(value) {
 }
 
 function isMatchingIdentifier(user, identifier) {
-  const authIdentifier = normalizeAuthIdentifier(identifier);
+  const authIdentifier = normalizeLookupToken(identifier);
   const email = normalizeEmail(identifier);
+  const uniqueNumber = normalizeLookupToken(user.uniqueNumber);
+  const userLabel = normalizeLookupToken(formatUserLabel(user));
 
   return Boolean(
     (email && user.email === email) ||
-    (authIdentifier && normalizeAuthIdentifier(user.username) === authIdentifier)
+    (authIdentifier && normalizeAuthIdentifier(user.username) === authIdentifier) ||
+    (authIdentifier && uniqueNumber === authIdentifier) ||
+    (authIdentifier && userLabel === authIdentifier)
+  );
+}
+
+function isSupportedSignInIdentifier(value) {
+  const normalizedValue = normalizeLookupToken(value);
+
+  return Boolean(
+    normalizedValue === normalizeLookupToken(DEFAULT_TEST_USER.username) ||
+    isValidGmailAddress(value) ||
+    /^asp-[a-z0-9-]+$/i.test(normalizedValue) ||
+    /^user-\d+$/i.test(normalizedValue) ||
+    /^[a-z0-9._-]{3,}$/i.test(normalizedValue)
   );
 }
 
@@ -3713,9 +5908,13 @@ async function loadUsersFromFirebase() {
   const users = [];
 
   querySnapshot.forEach(docSnap => {
+    if (docSnap.id === ACCOUNT_SEQUENCE_DOC_ID) {
+      return;
+    }
+
     const user = buildNormalizedUserRecord(docSnap.data(), "firebase", docSnap.id);
 
-    if ((user.email || user.username) && !isLegacyRemovedUserIdentity(user)) {
+    if ((user.email || user.username || user.uniqueNumber) && !isLegacyRemovedUserIdentity(user)) {
       users.push(user);
     }
   });
@@ -3750,6 +5949,35 @@ function findUserByEmail(users, email) {
   const normalizedEmail = normalizeEmail(email);
 
   return users.find(user => user.email === normalizedEmail);
+}
+
+function findUserByDocId(users, docId) {
+  const normalizedDocId = String(docId ?? "").trim();
+  return users.find(user => user.docId === normalizedDocId);
+}
+
+function collectAccountDeletionTargets(users, profile = {}) {
+  const normalizedUserId = String(profile?.userId || "").trim();
+  const normalizedEmail = normalizeEmail(profile?.email || "");
+  const normalizedUniqueNumber = normalizeLookupToken(profile?.uniqueNumber || "");
+
+  const matchedUsers = users.filter(user => (
+    (normalizedUserId && user.docId === normalizedUserId) ||
+    (normalizedEmail && user.email === normalizedEmail) ||
+    (normalizedUniqueNumber && normalizeLookupToken(user.uniqueNumber) === normalizedUniqueNumber)
+  ));
+
+  const matchedUserIds = new Set(
+    matchedUsers
+      .map(user => String(user?.docId || "").trim())
+      .filter(Boolean)
+  );
+
+  if (normalizedUserId) {
+    matchedUserIds.add(normalizedUserId);
+  }
+
+  return Array.from(matchedUserIds);
 }
 
 async function cleanupLegacyRemovedUsers() {
@@ -3907,14 +6135,18 @@ function handleSignupPasswordInput() {
   setFieldError("signupError", "");
 }
 
-function updateWelcomeMessage(username = DEFAULT_ACCOUNT_NAME) {
+function updateWelcomeMessage(profileOrName = DEFAULT_ACCOUNT_NAME) {
   const welcomeMessage = document.getElementById("welcomeMessage");
 
   if (!welcomeMessage) {
     return;
   }
 
-  welcomeMessage.innerText = formatUserDisplayName(username || DEFAULT_ACCOUNT_NAME);
+  const displayName = profileOrName && typeof profileOrName === "object"
+    ? formatProfileDisplayName(profileOrName)
+    : formatUserDisplayName(profileOrName || DEFAULT_ACCOUNT_NAME);
+
+  welcomeMessage.innerText = displayName;
 }
 
 function updateSignupEmailVerificationButton({ verified = false, busy = false } = {}) {
@@ -4278,13 +6510,14 @@ async function finalizeAuthenticatedSession(user, successMessage = "Signed in su
   setAuthStatus("");
   clearEmailLinkAuthSession();
   clearSignupDraft();
-  updateWelcomeMessage(user.firstName);
+  updateWelcomeMessage(user);
   resetSearchInput();
   clearAuthInputs();
   hideLandingOverlay();
 
   if (stockMasterLoaded) {
     await loadPortfolioFromFirebase();
+    await refreshLivePrices().catch(() => {});
   }
 
   showToast(
@@ -4353,7 +6586,7 @@ async function handleSignInWithGmailLinkClick() {
 
   if (!isValidGmailAddress(email)) {
     setAuthStatus("");
-    setAuthError("Enter a valid Email Address.");
+    setAuthError("Enter a valid email address.");
     identifierInput?.focus();
     identifierInput?.select();
     return;
@@ -4662,20 +6895,19 @@ async function handleSignInSubmit(event) {
 
   const identifierInput = document.getElementById("authIdentifier");
   const passwordInput = document.getElementById("authPassword");
-  const identifier = normalizeAuthIdentifier(identifierInput?.value || "");
+  const email = normalizeEmail(identifierInput?.value || "");
   const password = String(passwordInput?.value || "");
-  const isDefaultUsernameLogin = identifier === DEFAULT_TEST_USER.username;
 
   setAuthStatus("");
 
-  if (!identifier || !password) {
-    setAuthError("Enter your email address and password to continue.");
+  if (!email || !password) {
+    setAuthError("Enter your email and password to continue.");
     identifierInput?.focus();
     return;
   }
 
-  if (!isDefaultUsernameLogin && !isValidGmailAddress(identifier)) {
-    setAuthError("Enter a valid Email Address.");
+  if (!isValidGmailAddress(email)) {
+    setAuthError("Enter a valid email address.");
     identifierInput?.focus();
     identifierInput?.select();
     return;
@@ -4683,7 +6915,7 @@ async function handleSignInSubmit(event) {
 
   try {
     const users = await getAllKnownUsers();
-    const matchedUser = findUserByIdentifier(users, identifier);
+    const matchedUser = findUserByEmail(users, email);
 
     if (!matchedUser?.docId) {
       setAuthError("Please sign up to continue.");
@@ -4726,28 +6958,7 @@ async function handleSignUpSubmit(event) {
     }
 
     const passwordHash = await sha256Hex(signupData.password);
-    const uniqueNumber = `ASP-${Date.now()}`;
-    const createdAt = new Date().toISOString();
-    const userRef = await addDoc(collection(db, USERS_COLLECTION_NAME), {
-      uniqueNumber,
-      firstName: signupData.firstName,
-      lastName: signupData.lastName,
-      email: signupData.email,
-      passwordHash,
-      emailVerified: false,
-      emailVerifiedAt: "",
-      createdAt
-    });
-
-    const createdUser = {
-      docId: userRef.id,
-      uniqueNumber,
-      firstName: signupData.firstName,
-      lastName: signupData.lastName,
-      email: signupData.email,
-      emailVerified: false,
-      emailVerifiedAt: ""
-    };
+    const createdUser = await createUserAccount(signupData, passwordHash, knownUsers);
 
     await signOut(auth).catch(() => {});
     showSignupSuccessPanel({
@@ -4761,28 +6972,9 @@ async function handleSignUpSubmit(event) {
 }
 
 async function handleLogout() {
-  setStoredAuthState(false);
-  setStoredAuthProfile(null);
-  clearPasswordResetSession();
-  clearEmailLinkAuthSession();
-  clearSignupDraft();
-  updateWelcomeMessage(DEFAULT_ACCOUNT_NAME);
-  resetSearchInput();
-  await signOut(auth).catch(() => {});
-  hideForgotPasswordDialog({
-    clearFields: true
-  });
-  hideResetPasswordDialog();
-  hideChangeEmailDialog({
-    clearFields: true
-  });
-  clearPortfolioTable({
-    message: "Sign in to load your saved portfolio."
-  });
-  showLandingOverlay({
+  await performLogoutFlow({
     focusField: true,
-    resetFields: true,
-    mode: "signin"
+    resetFields: true
   });
 }
 
@@ -4914,8 +7106,12 @@ function applyPortfolioTheme(totalPnl) {
   }
 }
 
-function buildPortfolioDocId(userId, symbol) {
-  return `${String(userId || "").trim()}__${encodeURIComponent(String(symbol || "").trim().toUpperCase())}`;
+function buildPortfolioDocId(userId, symbol, demat) {
+  const normalizedUserId = String(userId || "").trim();
+  const normalizedSymbol = String(symbol || "").trim().toUpperCase();
+  const normalizedDemat = normalizeDemat(demat);
+
+  return `${normalizedUserId}__${encodeURIComponent(normalizedSymbol)}__${encodeURIComponent(normalizedDemat)}`;
 }
 
 function clearPortfolioTable({
@@ -4928,7 +7124,6 @@ function clearPortfolioTable({
     tbody.innerHTML = "";
   }
 
-  addedStocks.clear();
   currentDematFilter = DEMAT_FILTER_ALL;
   updateSummary();
   updateSortedHeader();
@@ -4940,30 +7135,28 @@ function clearPortfolioTable({
 }
 
 async function loadStockMaster() {
+  updateLivePriceStatus("error");
+
   try {
-    const response = await fetch(STOCK_SHEET_URL);
-    const text = await response.text();
-    const json = parseGvizResponse(text);
+    const snapshot = await fetchStockMasterSnapshot();
 
-    json.table.rows.forEach(row => {
-      const cols = row.c;
-      const name = String(cols[4]?.v ?? "").trim();
-      const symbol = String(cols[5]?.v ?? "").trim().toUpperCase();
-      const currentPrice = parseMoney(cols[6]?.v);
-
-      if (symbol) {
-        masterStocks[symbol] = {
-          ...masterStocks[symbol],
-          name,
-          currentPrice
-        };
-      }
-    });
+    applyStockMasterSnapshot(snapshot);
+    if (stockMasterSource === "bundled") {
+      showToast("Loaded bundled stock list. Live prices may stay unavailable until the API is reachable.", "warning");
+    }
+    if (document.getElementById("symbol")?.value.trim()) {
+      handleSearch();
+    }
   } catch {
-    showToast("Unable to load stock master", "error");
+    const message = window.location.protocol === "file:"
+      ? `Unable to load stock master. Run python main.py and open ${MARKET_DATA_API_FALLBACK_ORIGIN}.`
+      : "Unable to load stock master";
+    showToast(message, "error");
   } finally {
     stockMasterLoaded = true;
     await loadPortfolioFromFirebase();
+    startLivePriceRefreshLoop();
+    await refreshLivePrices().catch(() => {});
   }
 }
 
@@ -5000,10 +7193,36 @@ async function loadPortfolioFromFirebase() {
       const quantity = parseQuantity(savedStock.quantity ?? savedStock.shares ?? 0);
       const avgPrice = parseMoney(savedStock.avgPrice ?? 0);
       const demat = normalizeDemat(savedStock.demat);
+      const stockKey = buildStockDematKey(symbol, demat);
+      const normalizedDocKey = buildPortfolioDocId(userId, symbol, demat);
+      const normalizedStock = {
+        ...savedStock,
+        symbol,
+        quantity,
+        avgPrice,
+        demat,
+        __docKey: docSnap.id
+      };
 
-      if (symbol && quantity > 0 && avgPrice > 0 && demat && !savedStocks.has(symbol)) {
-        savedStocks.set(symbol, savedStock);
-      } else if (symbol) {
+      if (!symbol || quantity <= 0 || avgPrice <= 0 || !demat) {
+        staleDocIds.push(docSnap.id);
+        return;
+      }
+
+      if (!savedStocks.has(stockKey)) {
+        savedStocks.set(stockKey, normalizedStock);
+        return;
+      }
+
+      const existingStock = savedStocks.get(stockKey);
+      const shouldPreferCurrentDoc = docSnap.id === normalizedDocKey && existingStock?.__docKey !== normalizedDocKey;
+
+      if (shouldPreferCurrentDoc) {
+        if (existingStock?.__docKey) {
+          staleDocIds.push(existingStock.__docKey);
+        }
+        savedStocks.set(stockKey, normalizedStock);
+      } else {
         staleDocIds.push(docSnap.id);
       }
     });
@@ -5011,7 +7230,15 @@ async function loadPortfolioFromFirebase() {
     await Promise.all(staleDocIds.map(docId => deleteDoc(doc(db, PORTFOLIO_COLLECTION_NAME, docId)).catch(() => {})));
 
     Array.from(savedStocks.values())
-      .sort((a, b) => String(a.symbol ?? "").localeCompare(String(b.symbol ?? "")))
+      .sort((a, b) => {
+        const symbolComparison = String(a.symbol ?? "").localeCompare(String(b.symbol ?? ""));
+
+        if (symbolComparison !== 0) {
+          return symbolComparison;
+        }
+
+        return String(a.demat ?? "").localeCompare(String(b.demat ?? ""));
+      })
       .forEach(stock => addStockFromSaved(stock));
 
     if (savedStocks.size === 0) {
@@ -5020,6 +7247,8 @@ async function loadPortfolioFromFirebase() {
       return;
     }
 
+    syncAllDematOptions();
+    refreshSearchDropdownResults();
     updateSummary();
     applyCurrentSort();
   } catch {
@@ -5046,8 +7275,8 @@ function addStock() {
     return;
   }
 
-  if (addedStocks.has(symbol)) {
-    showToast(symbol + " already added", "warning");
+  if (isSymbolFullyAssigned(symbol)) {
+    showToast(`${symbol} already added in all demat accounts`, "warning");
     resetSearchInput();
     return;
   }
@@ -5082,10 +7311,12 @@ function addStock() {
     persisted: false
   }));
 
-  addedStocks.add(symbol);
   updateSummary();
   hideDematFilterMenu();
   renderDematFilterMenu();
+  syncDematOptionsForSymbol(symbol);
+  refreshSearchDropdownResults();
+  refreshLivePrices().catch(() => {});
   resetSearchInput();
   setEditorRowExpanded(rowIndex, true, {
     focusField: "quantity"
@@ -5095,7 +7326,7 @@ function addStock() {
 function addStockFromSaved(stock) {
   const hydratedStock = buildStockRecord(stock.symbol, stock);
 
-  if (!hydratedStock.symbol || addedStocks.has(hydratedStock.symbol)) {
+  if (!hydratedStock.symbol) {
     return;
   }
 
@@ -5104,8 +7335,6 @@ function addStockFromSaved(stock) {
     .insertAdjacentHTML("beforeend", createStockRow(hydratedStock, createRowIndex(), {
       persisted: true
     }));
-
-  addedStocks.add(hydratedStock.symbol);
 }
 
 function createStockRow(stock, index, { expanded = false, persisted = false } = {}) {
@@ -5119,6 +7348,7 @@ function createStockRow(stock, index, { expanded = false, persisted = false } = 
   const dematDisplayValue = getDematDisplayValue(demat);
   const escapedDemat = escapeHtml(demat);
   const escapedDematDisplayValue = escapeHtml(dematDisplayValue);
+  const escapedDocKey = escapeHtml(stock.docKey || "");
   const quantityValue = formatQuantity(quantity);
   const avgPriceValue = formatCurrency(avgPrice);
   const expandedClass = expanded ? " is-expanded" : "";
@@ -5135,6 +7365,7 @@ function createStockRow(stock, index, { expanded = false, persisted = false } = 
       data-current-price="${currentPrice}"
       data-current-value="${currentValue}"
       data-demat="${escapedDemat}"
+      data-doc-key="${escapedDocKey}"
       data-is-saved="${persisted ? "true" : "false"}"
       data-pnl="${pnl}">
       <td class="stock-column px-4 py-3 align-middle">
@@ -5207,7 +7438,7 @@ function createStockRow(stock, index, { expanded = false, persisted = false } = 
               <div class="share-control editor-select-shell rounded px-2 py-1 w-fit">
                 <select id="demat-${index}" class="demat-select"
                   onkeydown="handleEditorInputKeydown(event, '${index}')">
-                  ${createDematOptionsMarkup(demat)}
+                  ${createDematOptionsMarkup(stock.symbol, demat, { excludeRowId: index })}
                 </select>
               </div>
             </label>
@@ -5334,6 +7565,7 @@ async function saveExpandedRowValues(index) {
   if (!row) return;
 
   const isSavedRow = row.dataset.isSaved === "true";
+  const previousDocKey = String(row.dataset.docKey || "").trim();
   const symbol = row.dataset.symbol;
   const quantityInput = document.getElementById(`quantity-${index}`);
   const avgPriceInput = document.getElementById(`avgPrice-${index}`);
@@ -5351,7 +7583,18 @@ async function saveExpandedRowValues(index) {
     return;
   }
 
-  const currentPrice = parseMoney(masterStocks[symbol]?.currentPrice ?? row.dataset.currentPrice);
+  if (isStockAlreadyAddedInDemat(symbol, demat, {
+    excludeRowId: index
+  })) {
+    updateDematSelectOptions(index);
+    showToast(`${symbol} is already added in ${demat}`, "warning");
+    setEditorRowExpanded(index, true, {
+      focusField: "demat"
+    });
+    return;
+  }
+
+  const currentPrice = getPreferredCurrentPrice(symbol, row.dataset.currentPrice);
   const { investedValue, currentValue, pnl } = calculatePortfolioValues(quantity, avgPrice, currentPrice);
 
   row.dataset.quantity = quantity;
@@ -5389,9 +7632,9 @@ async function saveExpandedRowValues(index) {
 
   try {
     if (isSavedRow) {
-      await updatePortfolioInFirebase(symbol, persistencePayload);
+      row.dataset.docKey = await updatePortfolioInFirebase(previousDocKey, persistencePayload);
     } else {
-      await saveToFirebase(persistencePayload);
+      row.dataset.docKey = await saveToFirebase(persistencePayload);
       row.dataset.isSaved = "true";
     }
   } catch (error) {
@@ -5400,6 +7643,8 @@ async function saveExpandedRowValues(index) {
   }
 
   setEditorRowExpanded(index, false);
+  syncDematOptionsForSymbol(symbol);
+  refreshSearchDropdownResults();
 
   if (isSavedRow) {
     applyCurrentSort();
@@ -5426,16 +7671,18 @@ function removePortfolioRow(index) {
   if (!row) return;
 
   const symbol = row.dataset.symbol;
+  const docKey = String(row.dataset.docKey || "").trim();
   const isSavedRow = row.dataset.isSaved === "true";
   editorRow?.remove();
   row.remove();
-  addedStocks.delete(symbol);
+  syncDematOptionsForSymbol(symbol);
+  refreshSearchDropdownResults();
   updateSummary();
   applyCurrentSort();
   showToast(symbol + " removed", "error");
 
-  if (isSavedRow) {
-    deleteFromFirebase(symbol).catch(() => {
+  if (isSavedRow && docKey) {
+    deleteFromFirebase(docKey).catch(() => {
       showToast("Unable to remove the saved stock right now", "error");
     });
   }
@@ -5474,6 +7721,7 @@ function updateSummary() {
   }
 
   applyPortfolioTheme(pnlTotal);
+  refreshSecondaryViews();
 }
 
 function handleSearch() {
@@ -5499,6 +7747,16 @@ function handleSearch() {
 
 function openSearchDropdown() {
   const symbolInput = document.getElementById("symbol");
+
+  if (!stockMasterLoaded) {
+    showToast("Loading stock list...", "warning");
+    return;
+  }
+
+  if (Object.keys(masterStocks).length === 0) {
+    showToast("Stock list is unavailable right now. Please refresh and try again.", "error");
+    return;
+  }
 
   if (symbolInput.value.trim()) {
     handleSearch();
@@ -5565,18 +7823,20 @@ function highlightText(text, query) {
 function renderDropdown(list) {
   const input = document.getElementById("symbol").value.trim();
   const dropdown = document.getElementById("dropdown");
+  const totalDematOptions = getAvailableDematFilterOptions().length;
 
   dropdown.innerHTML = "";
 
   list.forEach((stock, index) => {
-    const isAdded = addedStocks.has(stock);
+    const remainingDematCount = getRemainingDematCountForSymbol(stock);
+    const isFullyAssigned = remainingDematCount === 0;
     const item = document.createElement("div");
     const stockName = masterStocks[stock]?.name || "";
     const highlightedName = highlightText(stockName, input);
     const highlightedSymbol = highlightText(stock, input);
     const quickAddSymbol = JSON.stringify(stock);
 
-    item.className = isAdded
+    item.className = isFullyAssigned
       ? "dropdown-static px-4 py-3 opacity-75"
       : "dropdown-option px-4 py-3 cursor-pointer";
 
@@ -5599,8 +7859,8 @@ function renderDropdown(list) {
         </div>
 
         ${
-          isAdded
-            ? `<span class="dropdown-added-badge">Added</span>`
+          isFullyAssigned
+            ? `<span class="dropdown-added-badge">All Demats Used</span>`
             : `<button
                 class="dropdown-add-button flex items-center justify-center"
                 onclick="event.stopPropagation(); quickAdd(${quickAddSymbol})">
@@ -5608,6 +7868,11 @@ function renderDropdown(list) {
               </button>`
         }
       </div>
+      ${
+        !isFullyAssigned && remainingDematCount < totalDematOptions
+          ? `<div class="mt-2 flex justify-end"><span class="dropdown-status-badge">${remainingDematCount} Demat${remainingDematCount === 1 ? "" : "s"} Left</span></div>`
+          : ""
+      }
     `;
 
     item.onclick = () => handleMatchSelection(index);
@@ -5646,8 +7911,8 @@ function handleMatchSelection(index) {
     return;
   }
 
-  if (addedStocks.has(symbol)) {
-    showToast(symbol + " already added", "warning");
+  if (isSymbolFullyAssigned(symbol)) {
+    showToast(`${symbol} already added in all demat accounts`, "warning");
     return;
   }
 
@@ -5703,6 +7968,7 @@ function updateSortedHeader() {
     .querySelectorAll("th[data-sort-key]")
     .forEach(th => {
       th.classList.remove("is-sorted");
+      th.setAttribute("aria-sort", "none");
 
       const indicator = th.querySelector(".sort-indicator");
 
@@ -5715,6 +7981,7 @@ function updateSortedHeader() {
 
   if (activeHeader) {
     activeHeader.classList.add("is-sorted");
+    activeHeader.setAttribute("aria-sort", currentSort.ascending ? "ascending" : "descending");
 
     const indicator = activeHeader.querySelector(".sort-indicator");
 
@@ -5799,7 +8066,7 @@ function selectStock(index) {
   const dropdown = document.getElementById("dropdown");
   const symbol = currentMatches[index];
 
-  if (!symbol || addedStocks.has(symbol)) {
+  if (!symbol || isSymbolFullyAssigned(symbol)) {
     return;
   }
 
@@ -5844,9 +8111,10 @@ async function saveToFirebase(stock) {
     throw new Error(getEmailVerificationReminderMessage());
   }
 
+  const docKey = buildPortfolioDocId(userId, stock.symbol, stock.demat);
   const timestamp = new Date().toISOString();
 
-  await setDoc(doc(db, PORTFOLIO_COLLECTION_NAME, buildPortfolioDocId(userId, stock.symbol)), {
+  await setDoc(doc(db, PORTFOLIO_COLLECTION_NAME, docKey), {
     userId,
     symbol: stock.symbol,
     stockName: stock.stockName,
@@ -5859,12 +8127,12 @@ async function saveToFirebase(stock) {
   }, {
     merge: true
   });
+
+  return docKey;
 }
 
-async function deleteFromFirebase(symbol) {
-  const userId = getCurrentSignedInUserId();
-
-  if (!userId) {
+async function deleteFromFirebase(docKey) {
+  if (!docKey) {
     return;
   }
 
@@ -5872,10 +8140,10 @@ async function deleteFromFirebase(symbol) {
     return;
   }
 
-  await deleteDoc(doc(db, PORTFOLIO_COLLECTION_NAME, buildPortfolioDocId(userId, symbol)));
+  await deleteDoc(doc(db, PORTFOLIO_COLLECTION_NAME, docKey));
 }
 
-async function updatePortfolioInFirebase(symbol, changes) {
+async function updatePortfolioInFirebase(previousDocKey, changes) {
   const userId = getCurrentSignedInUserId();
 
   if (!userId) {
@@ -5888,13 +8156,21 @@ async function updatePortfolioInFirebase(symbol, changes) {
     throw new Error(getEmailVerificationReminderMessage());
   }
 
-  await setDoc(doc(db, PORTFOLIO_COLLECTION_NAME, buildPortfolioDocId(userId, symbol)), {
+  const nextDocKey = buildPortfolioDocId(userId, changes.symbol, changes.demat);
+
+  await setDoc(doc(db, PORTFOLIO_COLLECTION_NAME, nextDocKey), {
     userId,
     ...changes,
     updatedAt: new Date().toISOString()
   }, {
     merge: true
   });
+
+  if (previousDocKey && previousDocKey !== nextDocKey) {
+    await deleteDoc(doc(db, PORTFOLIO_COLLECTION_NAME, previousDocKey)).catch(() => {});
+  }
+
+  return nextDocKey;
 }
 
 function handleDocumentClick(e) {
@@ -5972,6 +8248,7 @@ function handleBeforeUnload(event) {
 
 async function initializeEvents() {
   const symbolInput = document.getElementById("symbol");
+  const refreshPricesButton = document.getElementById("refreshPricesButton");
   const signinForm = document.getElementById("signinForm");
   const signupForm = document.getElementById("signupForm");
   const authIdentifier = document.getElementById("authIdentifier");
@@ -5994,14 +8271,34 @@ async function initializeEvents() {
   const openSidePanelButton = document.getElementById("openSidePanelButton");
   const closeSidePanelButton = document.getElementById("closeSidePanelButton");
   const sidePanelBackdrop = document.getElementById("sidePanelBackdrop");
+  const appPageButtons = getAppPageButtons();
   const profileButton = document.getElementById("profileButton");
-  const changeEmailButton = document.getElementById("changeEmailButton");
   const verifyEmailButton = document.getElementById("verifyEmailButton");
+  const deleteAccountButton = document.getElementById("deleteAccountButton");
+  const profileEditButton = document.getElementById("profileEditButton");
+  const profileCloseButton = document.getElementById("profileCloseButton");
   const emailVerificationBannerAction = document.getElementById("emailVerificationBannerAction");
+  const updateProfileForm = document.getElementById("updateProfileForm");
+  const updateProfileFirstName = document.getElementById("updateProfileFirstName");
+  const updateProfileLastName = document.getElementById("updateProfileLastName");
+  const updateProfileCancel = document.getElementById("updateProfileCancel");
   const changeEmailForm = document.getElementById("changeEmailForm");
   const changeEmailNew = document.getElementById("changeEmailNew");
   const changeEmailCancel = document.getElementById("changeEmailCancel");
+  const changePasswordForm = document.getElementById("changePasswordForm");
+  const changePasswordCancel = document.getElementById("changePasswordCancel");
+  const changePasswordCurrent = document.getElementById("changePasswordCurrent");
+  const changePasswordNew = document.getElementById("changePasswordNew");
+  const changePasswordConfirm = document.getElementById("changePasswordConfirm");
+  const deleteAccountCancel = document.getElementById("deleteAccountCancel");
+  const deleteAccountConfirm = document.getElementById("deleteAccountConfirm");
   const logoutButton = document.getElementById("logoutButton");
+  const settingsViewProfileButton = document.getElementById("settingsViewProfileButton");
+  const settingsChangeEmailButton = document.getElementById("settingsChangeEmailButton");
+  const settingsChangePasswordButton = document.getElementById("settingsChangePasswordButton");
+  const settingsVerifyEmailButton = document.getElementById("settingsVerifyEmailButton");
+  const settingsDeleteAccountButton = document.getElementById("settingsDeleteAccountButton");
+  const settingsLogoutButton = document.getElementById("settingsLogoutButton");
   const valueDialogOk = document.getElementById("valueDialogOk");
   const deleteConfirmCancel = document.getElementById("deleteConfirmCancel");
   const deleteConfirmOk = document.getElementById("deleteConfirmOk");
@@ -6010,12 +8307,13 @@ async function initializeEvents() {
 
   symbolInput.addEventListener("keydown", handleSymbolKeydown);
   symbolInput.addEventListener("click", openSearchDropdown);
+  refreshPricesButton?.addEventListener("click", handleRefreshPricesClick);
   signinForm.addEventListener("submit", handleSignInSubmit);
   signupForm.addEventListener("submit", handleSignUpSubmit);
   forgotPasswordForm.addEventListener("submit", handleForgotPasswordSubmit);
   resetPasswordForm.addEventListener("submit", handleResetPasswordSubmit);
   authIdentifier.addEventListener("input", event => {
-    event.target.value = normalizeAuthIdentifier(event.target.value);
+    event.target.value = normalizeEmail(event.target.value);
     setAuthError("");
     setAuthStatus("");
   });
@@ -6027,11 +8325,28 @@ async function initializeEvents() {
   signupLastName.addEventListener("input", handleSignupNameInput);
   signupFirstName.addEventListener("blur", handleSignupNameBlur);
   signupLastName.addEventListener("blur", handleSignupNameBlur);
+  updateProfileFirstName?.addEventListener("input", event => {
+    event.target.value = sanitizeNameInputValue(event.target.value);
+    clearUpdateProfileFeedback();
+  });
+  updateProfileLastName?.addEventListener("input", event => {
+    event.target.value = sanitizeNameInputValue(event.target.value);
+    clearUpdateProfileFeedback();
+  });
+  updateProfileFirstName?.addEventListener("blur", event => {
+    event.target.value = formatNamePart(event.target.value);
+  });
+  updateProfileLastName?.addEventListener("blur", event => {
+    event.target.value = formatNamePart(event.target.value);
+  });
   signupEmail.addEventListener("input", handleSignupEmailInput);
   changeEmailNew?.addEventListener("input", event => {
     event.target.value = normalizeEmail(event.target.value);
     clearChangeEmailFeedback();
   });
+  changePasswordCurrent?.addEventListener("input", clearChangePasswordFeedback);
+  changePasswordNew?.addEventListener("input", clearChangePasswordFeedback);
+  changePasswordConfirm?.addEventListener("input", clearChangePasswordFeedback);
   signupPassword.addEventListener("input", handleSignupPasswordInput);
   signupConfirmPassword.addEventListener("input", handleSignupPasswordInput);
   signupSuccessSigninButton.addEventListener("click", handleSignupSuccessSigninClick);
@@ -6041,7 +8356,7 @@ async function initializeEvents() {
     });
   });
   openForgotPasswordButton.addEventListener("click", () => {
-    const currentIdentifier = normalizeAuthIdentifier(authIdentifier?.value || "");
+    const currentIdentifier = normalizeEmail(authIdentifier?.value || "");
     const emailCandidate = isValidGmailAddress(currentIdentifier) ? normalizeEmail(currentIdentifier) : "";
 
     showForgotPasswordDialog({
@@ -6078,19 +8393,44 @@ async function initializeEvents() {
     });
     restoreSignupDraft();
   });
+  appPageButtons.forEach(button => {
+    button.addEventListener("click", () => {
+      switchAppPage(button.dataset.appPageTarget || "home");
+    });
+  });
   openSidePanelButton.addEventListener("click", openSidePanel);
   closeSidePanelButton.addEventListener("click", closeSidePanel);
   sidePanelBackdrop.addEventListener("click", handleSidePanelBackdropClick);
   profileButton?.addEventListener("click", handleProfileButtonClick);
-  changeEmailButton?.addEventListener("click", showChangeEmailDialog);
   verifyEmailButton?.addEventListener("click", handleVerifyEmailButtonClick);
+  deleteAccountButton?.addEventListener("click", showDeleteAccountDialog);
   emailVerificationBannerAction?.addEventListener("click", openSidePanel);
+  updateProfileForm?.addEventListener("submit", handleUpdateProfileSubmit);
+  updateProfileCancel?.addEventListener("click", () => {
+    hideUpdateProfileDialog({
+      clearFields: true
+    });
+  });
   changeEmailForm?.addEventListener("submit", handleChangeEmailSubmit);
   changeEmailCancel?.addEventListener("click", () => {
     hideChangeEmailDialog({
       clearFields: true
     });
   });
+  changePasswordForm?.addEventListener("submit", handleChangePasswordSubmit);
+  changePasswordCancel?.addEventListener("click", () => {
+    hideChangePasswordDialog({
+      clearFields: true
+    });
+  });
+  settingsViewProfileButton?.addEventListener("click", handleProfileButtonClick);
+  settingsChangeEmailButton?.addEventListener("click", showChangeEmailDialog);
+  settingsChangePasswordButton?.addEventListener("click", showChangePasswordDialog);
+  settingsVerifyEmailButton?.addEventListener("click", handleVerifyEmailButtonClick);
+  settingsDeleteAccountButton?.addEventListener("click", showDeleteAccountDialog);
+  settingsLogoutButton?.addEventListener("click", handleLogout);
+  deleteAccountCancel?.addEventListener("click", hideDeleteAccountDialog);
+  deleteAccountConfirm?.addEventListener("click", handleDeleteAccountConfirm);
   logoutButton.addEventListener("click", handleLogout);
   valueDialogOk.addEventListener("click", hideValueDialog);
   deleteConfirmCancel.addEventListener("click", hideDeleteConfirmDialog);
@@ -6098,7 +8438,11 @@ async function initializeEvents() {
   document.addEventListener("click", handleDocumentClick);
   document.addEventListener("keydown", handlePageRefreshKeydown);
   document.addEventListener("keydown", handleGlobalKeydown);
+  document.addEventListener("visibilitychange", handleVisibilityChange);
   window.addEventListener("beforeunload", handleBeforeUnload);
+  profileEditButton?.addEventListener("click", handleProfileEditClick);
+  profileCloseButton?.addEventListener("click", hideProfileDialog);
+  await setPersistence(auth, browserSessionPersistence).catch(() => {});
   await cleanupLegacyRemovedUsers();
   currentDematFilter = DEMAT_FILTER_ALL;
   updateSortedHeader();
@@ -6110,9 +8454,13 @@ async function initializeEvents() {
   });
   const hasValidStoredSession = Boolean(isAuthenticated && storedProfile?.userId);
 
-  updateWelcomeMessage(storedProfile?.firstName || DEFAULT_ACCOUNT_NAME);
+  updateWelcomeMessage(storedProfile || DEFAULT_ACCOUNT_NAME);
   updateQuickMenuProfile(storedProfile);
   updateEmailVerificationBanner(storedProfile);
+  renderSettingsView(storedProfile);
+  switchAppPage("home", {
+    closeMenu: false
+  });
   clearPortfolioTable({
     message: hasValidStoredSession && !storedProfile?.emailVerified
       ? getUnverifiedDashboardMessage()
@@ -6124,6 +8472,7 @@ async function initializeEvents() {
   } else {
     setStoredAuthState(false);
     setStoredAuthProfile(null);
+    clearLegacyAuthStorage();
     updateWelcomeMessage(DEFAULT_ACCOUNT_NAME);
     showLandingOverlay({
       focusField: true,

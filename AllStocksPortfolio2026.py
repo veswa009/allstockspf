@@ -1,39 +1,45 @@
+import csv
+import io
+
 import requests
-import json
 
-res = requests.get("https://www.google.com")
-print(res.status_code)
+NSE_MASTER_URLS = (
+    "https://nsearchives.nseindia.com/content/equities/EQUITY_L.csv",
+    "https://nsearchives.nseindia.com/content/equities/SME_EQUITY_L.csv",
+)
 
-url = "https://docs.google.com/spreadsheets/d/17B4IEGfyIwoWGwEsdadqFzwXvn5LNW5-8E8ZeGvZKrE/gviz/tq?tqx=out:json"
 
-res = requests.get(url)
-data = res.text
+def fetch_rows(url: str) -> list[dict]:
+    response = requests.get(
+        url,
+        headers={"User-Agent": "Mozilla/5.0", "Accept": "text/csv, text/plain, */*"},
+        timeout=20,
+    )
+    response.raise_for_status()
 
-# remove wrapper
-json_data = json.loads(data[47:-2])
+    reader = csv.DictReader(io.StringIO(response.text.lstrip("\ufeff")), skipinitialspace=True)
+    result = []
 
-rows = json_data['table']['rows']
+    for row in reader:
+        symbol = str(row.get("SYMBOL") or "").strip().upper()
+        company_name = str(row.get("NAME OF COMPANY") or "").strip()
 
-result = []
+        if not symbol or not company_name or symbol.startswith("**"):
+            continue
 
-for row in rows:
-    cols = row['c']
-    
-    company_name = cols[4]['v']
-    symbol = cols[5]['v']
-    cmp_price = cols[6]['v']
-    shares = cols[7]['v']
-    distribution_per_share = cols[8]['v']
-    
-    expected_distribution = shares * distribution_per_share
-    
-    result.append({
-        "symbol": symbol,
-        "company_name": company_name,
-        "cmp": cmp_price,
-        "shares": shares,
-        "distribution_per_share": distribution_per_share,
-        "expected_distribution": expected_distribution
-    })
+        result.append({
+            "symbol": symbol,
+            "company_name": company_name,
+            "series": str(row.get("SERIES") or "").strip().upper(),
+        })
 
-print(result)
+    return result
+
+
+all_stocks = {}
+
+for url in NSE_MASTER_URLS:
+    for stock in fetch_rows(url):
+        all_stocks.setdefault(stock["symbol"], stock)
+
+print(list(all_stocks.values()))
